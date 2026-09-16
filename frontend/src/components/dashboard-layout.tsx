@@ -2,13 +2,16 @@
 
 import { useAuth } from "@/src/lib/auth-context";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { LayoutBackground } from "./layout-background";
 import { Sidebar } from "./sidebar";
+import { Header } from "./header";
 import { PageLoading } from "./ui/loading";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -17,7 +20,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }, [user, loading, router]);
 
   if (loading) {
-    return <PageLoading />;
+    return (
+      <div className="min-h-screen relative">
+        <LayoutBackground />
+        <div className="relative z-10">
+          <PageLoading />
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
@@ -25,11 +35,15 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Sidebar />
-      <main className="lg:ml-64 pt-16 lg:pt-0">
-        <div className="p-4 lg:p-8">{children}</div>
-      </main>
+    <div className="min-h-screen relative">
+      <LayoutBackground />
+      <div className="relative z-10">
+        <Sidebar isOpen={sidebarOpen} onOpenChange={setSidebarOpen} />
+        <Header onMenuClick={() => setSidebarOpen(true)} />
+        <main className="lg:ml-64 pt-16 lg:pt-20">
+          <div className="p-4 lg:p-8">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

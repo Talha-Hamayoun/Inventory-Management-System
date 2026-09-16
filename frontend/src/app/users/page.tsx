@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -194,13 +195,13 @@ export default function UsersPage() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <select
+              <Select
                 value={roleFilter}
                 onChange={(e) => {
                   setRoleFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-48 flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-48"
               >
                 <option value="">All Roles</option>
                 {roles.map((role) => (
@@ -208,7 +209,7 @@ export default function UsersPage() {
                     {role.name}
                   </option>
                 ))}
-              </select>
+              </Select>
               <Button type="submit" variant="outline" className="gap-2">
                 <Search className="h-4 w-4" />
                 Search
@@ -331,14 +332,14 @@ export default function UsersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Role *
               </label>
-              <select {...register("roleId")}>
+              <Select {...register("roleId")} className="w-full">
                 <option value="">Select role</option>
                 {roles.map((role) => (
                   <option key={role.id} value={role.id}>
                     {role.name}
                   </option>
                 ))}
-              </select>
+              </Select>
               {errors.roleId && (
                 <p className="text-sm text-red-500 mt-1">{errors.roleId.message}</p>
               )}

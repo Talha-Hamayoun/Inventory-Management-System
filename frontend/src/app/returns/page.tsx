@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Loading } from "@/src/components/ui/loading";
 import { Pagination } from "@/src/components/ui/pagination";
@@ -13,8 +14,6 @@ import { Plus, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
-const selectClass =
-  "flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent";
 
 function ReturnTypeBadge({ type }: { type: ReturnType }) {
   return (
@@ -84,25 +83,25 @@ export default function ReturnsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-4">
-              <select
+              <Select
                 value={returnType}
                 onChange={(e) => { setReturnType(e.target.value as ReturnType | ""); setPage(1); }}
-                className={selectClass + " w-48"}
+                className="w-48"
               >
                 <option value="">All Types</option>
                 <option value="SALES_RETURN">Sales Return</option>
                 <option value="PURCHASE_RETURN">Purchase Return</option>
-              </select>
-              <select
+              </Select>
+              <Select
                 value={status}
                 onChange={(e) => { setStatus(e.target.value as ReturnStatus | ""); setPage(1); }}
-                className={selectClass + " w-40"}
+                className="w-40"
               >
                 <option value="">All Statuses</option>
                 <option value="PENDING">Pending</option>
                 <option value="PROCESSED">Processed</option>
                 <option value="CANCELLED">Cancelled</option>
-              </select>
+              </Select>
             </div>
           </CardContent>
         </Card>

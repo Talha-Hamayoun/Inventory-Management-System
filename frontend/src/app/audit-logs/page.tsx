@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -117,7 +118,7 @@ export default function AuditLogsPage() {
           <CardContent className="pt-6">
             <form onSubmit={handleSearch} className="space-y-4">
               <div className="flex flex-wrap gap-4">
-                <select
+                <Select
                   value={entityType}
                   onChange={(e) => {
                     setEntityType(e.target.value);
@@ -131,8 +132,8 @@ export default function AuditLogsPage() {
                       {type}
                     </option>
                   ))}
-                </select>
-                <select
+                </Select>
+                <Select
                   value={action}
                   onChange={(e) => {
                     setAction(e.target.value as "CREATE" | "UPDATE" | "DELETE" | "");
@@ -146,7 +147,7 @@ export default function AuditLogsPage() {
                       {act}
                     </option>
                   ))}
-                </select>
+                </Select>
                 <Input
                   type="date"
                   value={startDate}

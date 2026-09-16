@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -13,8 +14,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const selectClass =
-  "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50";
 
 interface SimpleProduct { id: string; name: string; sku: string | null }
 interface SimpleWarehouse { id: string; name: string }
@@ -122,13 +121,13 @@ export default function NewAlertPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Product *
                   </label>
-                  <select
+                  <Select
                     value={productId}
                     onChange={(e) => {
                       setProductId(e.target.value);
                       setErrors((prev) => ({ ...prev, productId: "" }));
                     }}
-                    className={selectClass}
+                    className="w-full"
                   >
                     <option value="">Select product</option>
                     {products.map((p) => (
@@ -136,7 +135,7 @@ export default function NewAlertPage() {
                         {p.name}{p.sku ? ` | ${p.sku}` : ""}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {errors.productId && (
                     <p className="text-sm text-red-500 mt-1">{errors.productId}</p>
                   )}
@@ -146,13 +145,13 @@ export default function NewAlertPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Warehouse *
                   </label>
-                  <select
+                  <Select
                     value={warehouseId}
                     onChange={(e) => {
                       setWarehouseId(e.target.value);
                       setErrors((prev) => ({ ...prev, warehouseId: "" }));
                     }}
-                    className={selectClass}
+                    className="w-full"
                   >
                     <option value="">Select warehouse</option>
                     {warehouses.map((w) => (
@@ -160,7 +159,7 @@ export default function NewAlertPage() {
                         {w.name}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {errors.warehouseId && (
                     <p className="text-sm text-red-500 mt-1">{errors.warehouseId}</p>
                   )}
@@ -172,14 +171,14 @@ export default function NewAlertPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Alert Type *
                   </label>
-                  <select
+                  <Select
                     value={alertType}
                     onChange={(e) => setAlertType(e.target.value as AlertType)}
-                    className={selectClass}
+                    className="w-full"
                   >
                     <option value="LOW_STOCK">Low Stock — triggers when stock falls below threshold</option>
                     <option value="OUT_OF_STOCK">Out of Stock — triggers when stock reaches zero</option>
-                  </select>
+                  </Select>
                 </div>
 
                 <div>

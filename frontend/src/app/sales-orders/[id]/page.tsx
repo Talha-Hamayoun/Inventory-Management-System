@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -405,16 +406,16 @@ export default function SalesOrderDetailPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-              <select
+              <Select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod | "")}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full"
               >
                 <option value="">— Select method —</option>
                 {(Object.keys(PAYMENT_METHOD_LABELS) as PaymentMethod[]).map((key) => (
                   <option key={key} value={key}>{PAYMENT_METHOD_LABELS[key]}</option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             <div className="flex justify-end gap-2 pt-2">

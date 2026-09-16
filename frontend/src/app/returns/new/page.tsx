@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -13,8 +14,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const selectClass =
-  "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50";
 
 interface ReturnItemRow {
   productId: string;
@@ -221,24 +220,24 @@ export default function NewReturnPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Return Type *</label>
-                <select
+                <Select
                   value={returnType}
                   onChange={(e) => setReturnType(e.target.value as ReturnType)}
-                  className={selectClass}
+                  className="w-full"
                 >
                   <option value="SALES_RETURN">Sales Return (Customer → Us)</option>
                   <option value="PURCHASE_RETURN">Purchase Return (Us → Supplier)</option>
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   {returnType === "SALES_RETURN" ? "Sales Order *" : "Purchase Order *"}
                 </label>
-                <select
+                <Select
                   value={selectedOrderId}
                   onChange={(e) => handleOrderSelect(e.target.value)}
-                  className={selectClass}
+                  className="w-full"
                 >
                   <option value="">
                     {returnType === "SALES_RETURN"
@@ -248,7 +247,7 @@ export default function NewReturnPage() {
                   {orderList.map((o) => (
                     <option key={o.id} value={o.id}>{o.label}</option>
                   ))}
-                </select>
+                </Select>
                 {orderList.length === 0 && (
                   <p className="text-xs text-gray-400 mt-1">
                     {returnType === "SALES_RETURN"
@@ -262,10 +261,10 @@ export default function NewReturnPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
-                <select value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)} className={selectClass}>
+                <Select value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)} className="w-full">
                   <option value="">Select warehouse...</option>
                   {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                </select>
+                </Select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes (optional)</label>
@@ -292,10 +291,10 @@ export default function NewReturnPage() {
                 <div className="flex flex-wrap gap-4 items-end">
                   <div className="flex-1 min-w-40">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Product</label>
-                    <select
+                    <Select
                       value={panelProductId}
                       onChange={(e) => { setPanelProductId(e.target.value); setDuplicateMsg(""); }}
-                      className={selectClass}
+                      className="w-full"
                       disabled={!selectedOrderId || availableProducts.length === 0}
                     >
                       <option value="">
@@ -310,7 +309,7 @@ export default function NewReturnPage() {
                           {p.name}{p.sku ? ` (${p.sku})` : ""} — max: {p.maxQty}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>
@@ -325,16 +324,16 @@ export default function NewReturnPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Condition</label>
-                    <select
+                    <Select
                       value={panelCondition}
                       onChange={(e) => setPanelCondition(e.target.value as ReturnCondition)}
-                      className={selectClass + " w-44"}
+                      className="w-44"
                     >
                       <option value="RESTOCKABLE">
                         {returnType === "PURCHASE_RETURN" ? "Good Condition" : "Restockable"}
                       </option>
                       <option value="DAMAGED">Damaged</option>
-                    </select>
+                    </Select>
                   </div>
                   <Button type="button" onClick={handleAddItem} disabled={!panelProductId}>
                     Add Item

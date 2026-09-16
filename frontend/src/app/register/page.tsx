@@ -10,6 +10,7 @@ import { authApi } from "@/src/lib/api";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/src/components/ui/card";
+import { LayoutBackground } from "@/src/components/layout-background";
 import { Package, Loader2 } from "lucide-react";
 
 const registerSchema = z.object({
@@ -83,8 +84,9 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <main className="min-h-screen relative flex items-center justify-center p-4">
+      <LayoutBackground overlay="dark" />
+      <Card className="relative z-10 w-full max-w-md bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm shadow-xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center">

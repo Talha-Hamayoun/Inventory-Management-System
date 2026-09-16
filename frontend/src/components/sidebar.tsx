@@ -9,7 +9,6 @@ import {
   Package,
   Warehouse,
   Truck,
-  ShoppingCart,
   ArrowLeftRight,
   RotateCcw,
   Bell,
@@ -20,12 +19,14 @@ import {
   Settings,
   LogOut,
   ChevronDown,
-  Menu,
   X,
   FolderTree,
+  LayoutList,
+  Building2,
+  ClipboardList,
+  ShoppingBag,
 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "./ui/button";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, permission: null },
@@ -33,120 +34,185 @@ const navigation = [
   { name: "Categories", href: "/categories", icon: FolderTree, permission: "categories:read" },
   { name: "Inventory", href: "/inventory", icon: Warehouse, permission: "inventory:read" },
   { name: "Suppliers", href: "/suppliers", icon: Truck, permission: "suppliers:read" },
-  { name: "Warehouses", href: "/warehouses", icon: Warehouse, permission: "warehouses:read" },
-  { name: "Purchase Orders", href: "/purchase-orders", icon: ShoppingCart, permission: "purchase-orders:read" },
+  { name: "Warehouses", href: "/warehouses", icon: Building2, permission: "warehouses:read" },
+  { name: "Purchase Orders", href: "/purchase-orders", icon: ClipboardList, permission: "purchase-orders:read" },
   { name: "Reservations", href: "/reservations", icon: ArrowLeftRight, permission: "reservations:read" },
   { name: "Returns", href: "/returns", icon: RotateCcw, permission: "returns:read" },
   { name: "Stock Alerts", href: "/alerts", icon: Bell, permission: "alerts:read" },
   { name: "Customers", href: "/customers", icon: UserCheck, permission: "customers:read" },
-  { name: "Sales Orders", href: "/sales-orders", icon: ShoppingCart, permission: "sales-orders:read" },
+  { name: "Sales Orders", href: "/sales-orders", icon: ShoppingBag, permission: "sales-orders:read" },
   { name: "Users", href: "/users", icon: Users, permission: "users:read" },
   { name: "Roles", href: "/roles", icon: Shield, permission: "roles:read" },
   { name: "Audit Logs", href: "/audit-logs", icon: FileText, permission: "audit:read" },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+  isOpen,
+  onOpenChange,
+}: {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const pathname = usePathname();
   const { user, logout, hasPermission } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(true);
 
   const filteredNav = navigation.filter(
     (item) => !item.permission || hasPermission(item.permission)
   );
 
+  const isItemActive = (href: string) =>
+    pathname === href || pathname.startsWith(href + "/");
+
+  const hasActiveChild = filteredNav.some((item) => isItemActive(item.href));
+
   return (
     <>
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b px-4 py-3 flex items-center justify-between">
-        <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
-          {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </Button>
-        <span className="font-semibold">Inventory Management</span>
-        <div className="w-10" />
-      </div>
-
-      {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-30 bg-black/50"
-          onClick={() => setIsOpen(false)}
+          className="lg:hidden fixed inset-0 z-35 bg-black/50 backdrop-blur-sm"
+          onClick={() => onOpenChange(false)}
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          "fixed top-0 left-0 z-40 h-screen w-64 bg-gray-900 text-white transition-transform lg:translate-x-0",
+          "fixed top-0 left-0 z-40 h-screen w-64 text-white transition-transform duration-300 lg:translate-x-0",
+          "bg-[#0b1220]/90 backdrop-blur-2xl border-r border-white/10 shadow-2xl shadow-black/20",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="flex items-center gap-2 px-4 py-6 border-b border-gray-800">
-            <Package className="h-8 w-8 text-blue-500" />
-            <span className="text-xl font-bold">Inventory</span>
+          <div className="px-4 pt-5 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <Package className="h-5 w-5 text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-base font-semibold tracking-tight">Inventory</p>
+                <p className="text-[11px] text-white/45 truncate">Management System</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onOpenChange(false)}
+                className="lg:hidden h-8 w-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 cursor-pointer"
+                aria-label="Close menu"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto py-4">
-            <ul className="space-y-1 px-2">
-              {filteredNav.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                return (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      onClick={() => setIsOpen(false)}
-                      className={cn(
-                        "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors cursor-pointer",
-                        isActive
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                      )}
-                    >
-                      <item.icon className="h-5 w-5" />
-                      {item.name}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+          <nav className="flex-1 overflow-y-auto sidebar-scroll px-3 pb-3">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              className={cn(
+                "sticky top-0 z-10 w-full flex items-center justify-between gap-2 rounded-xl px-2.5 py-2 text-sm font-semibold transition-colors cursor-pointer backdrop-blur-xl",
+                hasActiveChild
+                  ? "text-white bg-[#0b1220]/95"
+                  : "text-white/80 bg-[#0b1220]/90 hover:bg-white/6 hover:text-white"
+              )}
+              aria-expanded={menuOpen}
+            >
+              <span className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    "h-8 w-8 rounded-lg flex items-center justify-center",
+                    hasActiveChild ? "bg-blue-500/20 text-blue-300" : "bg-white/8 text-white/70"
+                  )}
+                >
+                  <LayoutList className="h-4 w-4" />
+                </span>
+                Menu
+              </span>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 text-white/50 transition-transform duration-200",
+                  menuOpen && "rotate-180"
+                )}
+              />
+            </button>
 
-          {/* User section */}
-          <div className="border-t border-gray-800 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center">
-                {user?.name?.charAt(0).toUpperCase()}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user?.name}</p>
-                <p className="text-xs text-gray-400 truncate">{user?.role?.name}</p>
+            <div
+              className={cn(
+                "grid transition-[grid-template-rows] duration-200 ease-out",
+                menuOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+              )}
+            >
+              <div className="min-h-0 overflow-hidden">
+                <ul className="relative mt-1 ml-5 border-l border-white/10 pl-3 space-y-0.5 py-1">
+                  {filteredNav.map((item) => {
+                    const active = isItemActive(item.href);
+                    return (
+                      <li key={item.name}>
+                        <Link
+                          href={item.href}
+                          onClick={() => onOpenChange(false)}
+                          className={cn(
+                            "group relative flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-[13px] font-medium transition-all duration-200 cursor-pointer",
+                            active
+                              ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
+                              : "text-white/65 hover:text-white hover:bg-white/8"
+                          )}
+                        >
+                          <item.icon
+                            className={cn(
+                              "h-4 w-4 shrink-0",
+                              active ? "text-white" : "text-white/45 group-hover:text-white/80"
+                            )}
+                          />
+                          <span className="truncate">{item.name}</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
             </div>
-            {hasPermission("*") && (
-              <Link
-                href="/settings"
-                onClick={() => setIsOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors mb-1 w-full",
-                  pathname === "/settings"
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-300 hover:bg-gray-800 hover:text-white"
+          </nav>
+
+          <div className="p-3">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
+              <div className="flex items-center gap-3">
+                <div className="h-9 w-9 rounded-full bg-linear-to-br from-blue-500 to-indigo-500 flex items-center justify-center text-sm font-semibold shadow-md shadow-blue-500/20">
+                  {user?.name?.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{user?.name}</p>
+                  <p className="text-[11px] text-white/45 truncate">{user?.role?.name}</p>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-1.5">
+                {hasPermission("*") && (
+                  <Link
+                    href="/settings"
+                    onClick={() => onOpenChange(false)}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-colors",
+                      pathname === "/settings"
+                        ? "bg-blue-600 text-white"
+                        : "text-white/70 hover:text-white hover:bg-white/10"
+                    )}
+                  >
+                    <Settings className="h-3.5 w-3.5" />
+                    Settings
+                  </Link>
                 )}
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </Link>
-            )}
-            <Button
-              variant="ghost"
-              className="w-full justify-start text-gray-300 hover:text-white hover:bg-gray-800"
-              onClick={logout}
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className={cn(
+                    "flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-white/70 hover:text-red-200 hover:bg-red-500/15 transition-colors cursor-pointer",
+                    !hasPermission("*") && "col-span-2"
+                  )}
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  Logout
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </aside>

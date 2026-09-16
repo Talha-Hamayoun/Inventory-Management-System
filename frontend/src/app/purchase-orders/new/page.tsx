@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -36,8 +37,6 @@ interface SimpleSupplier { id: string; name: string }
 interface SimpleWarehouse { id: string; name: string }
 interface SimpleProduct { id: string; name: string; sku?: string }
 
-const selectClass =
-  "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function NewPurchaseOrderPage() {
   const router = useRouter();
@@ -204,12 +203,12 @@ export default function NewPurchaseOrderPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Supplier *</label>
-                  <select {...register("supplierId")} className={selectClass}>
+                  <Select {...register("supplierId")} className="w-full">
                     <option value="">Select supplier</option>
                     {suppliers.map((s) => (
                       <option key={s.id} value={s.id}>{s.name}</option>
                     ))}
-                  </select>
+                  </Select>
                   {errors.supplierId && (
                     <p className="text-sm text-red-500 mt-1">{errors.supplierId.message}</p>
                   )}
@@ -218,12 +217,12 @@ export default function NewPurchaseOrderPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Destination Warehouse *
                   </label>
-                  <select {...register("warehouseId")} className={selectClass}>
+                  <Select {...register("warehouseId")} className="w-full">
                     <option value="">Select warehouse</option>
                     {warehouses.map((wh) => (
                       <option key={wh.id} value={wh.id}>{wh.name}</option>
                     ))}
-                  </select>
+                  </Select>
                   {errors.warehouseId && (
                     <p className="text-sm text-red-500 mt-1">{errors.warehouseId.message}</p>
                   )}
@@ -255,13 +254,13 @@ export default function NewPurchaseOrderPage() {
                 <div className="flex flex-wrap gap-4 items-end">
                   <div className="flex-1 min-w-40">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Product</label>
-                    <select
+                    <Select
                       value={newItem.productId}
                       onChange={(e) => {
                         setNewItem({ ...newItem, productId: e.target.value });
                         setDuplicateMsg("");
                       }}
-                      className={selectClass}
+                      className="w-full"
                       disabled={isEditing}
                     >
                       <option value="">Select product</option>
@@ -270,7 +269,7 @@ export default function NewPurchaseOrderPage() {
                           {p.name}{p.sku ? ` | ${p.sku}` : ""}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>

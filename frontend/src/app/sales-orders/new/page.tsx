@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -23,7 +24,6 @@ interface CustomerOption { id: string; name: string; phone: string; }
 interface WarehouseOption { id: string; name: string; }
 interface ProductOption { id: string; name: string; sku: string | undefined; costPrice: number | null; sellingPrice: number | null; }
 
-const selectClass = "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50";
 
 export default function NewSalesOrderPage() {
   const router = useRouter();
@@ -191,17 +191,17 @@ export default function NewSalesOrderPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                  <select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className={selectClass} required>
+                  <Select value={customerId} onChange={(e) => setCustomerId(e.target.value)} className="w-full" required>
                     <option value="">Select customer...</option>
                     {customers.map((c) => <option key={c.id} value={c.id}>{c.name} — {c.phone}</option>)}
-                  </select>
+                  </Select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
-                  <select value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)} className={selectClass} required>
+                  <Select value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)} className="w-full" required>
                     <option value="">Select warehouse...</option>
                     {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
-                  </select>
+                  </Select>
                 </div>
               </div>
               <div>
@@ -222,17 +222,17 @@ export default function NewSalesOrderPage() {
                 <div className="flex flex-wrap gap-4 items-end">
                   <div className="flex-1 min-w-40">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Product</label>
-                    <select
+                    <Select
                       value={panelItem.productId}
                       onChange={(e) => handlePanelProductChange(e.target.value)}
-                      className={selectClass}
+                      className="w-full"
                       disabled={editIndex !== null}
                     >
                       <option value="">Select product...</option>
                       {products.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}{p.sku ? ` (${p.sku})` : ""}</option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Qty</label>

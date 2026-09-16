@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Loading } from "@/src/components/ui/loading";
 import { Pagination } from "@/src/components/ui/pagination";
@@ -14,8 +15,6 @@ import { Eye, Plus, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
-const selectClass =
-  "flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent";
 
 const STATUS_VARIANTS: Record<ReservationStatus, "info" | "default" | "success"> = {
   RESERVED: "info",
@@ -67,16 +66,16 @@ export default function ReservationsPage() {
 
         <Card>
           <CardContent className="pt-6">
-            <select
+            <Select
               value={status}
               onChange={(e) => { setStatus(e.target.value as ReservationStatus | ""); setPage(1); }}
-              className={selectClass + " w-48"}
+              className="w-48"
             >
               <option value="">All Statuses</option>
               <option value="RESERVED">Reserved</option>
               <option value="RELEASED">Released</option>
               <option value="FULFILLED">Fulfilled</option>
-            </select>
+            </Select>
           </CardContent>
         </Card>
 

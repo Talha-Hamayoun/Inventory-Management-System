@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun run dist/index.js",
     "start:watch": "bun run --hot dist/index.js",
     "type-check": "tsc --noEmit --watch --preserveWatchOutput",
     "db:generate": "npx prisma generate --schema=./prisma/main-db/schema.prisma",

@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Loading } from "@/src/components/ui/loading";
 import { Pagination } from "@/src/components/ui/pagination";
@@ -15,8 +16,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const selectClass =
-  "flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent";
 
 export default function AlertsPage() {
   const [loading, setLoading] = useState(true);
@@ -113,18 +112,18 @@ export default function AlertsPage() {
         <Card>
           <CardContent className="pt-6">
             <div className="flex flex-wrap gap-4">
-              <select
+              <Select
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value as "" | "active" | "inactive");
                   setPage(1);
                 }}
-                className={selectClass + " w-40"}
+                className="w-40"
               >
                 <option value="">All Status</option>
                 <option value="active">Active</option>
                 <option value="inactive">Inactive</option>
-              </select>
+              </Select>
             </div>
           </CardContent>
         </Card>

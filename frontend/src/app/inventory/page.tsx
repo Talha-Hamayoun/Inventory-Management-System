@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -312,7 +313,6 @@ export default function InventoryPage() {
     return false;
   };
 
-  const selectClass = "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <DashboardLayout>
@@ -344,16 +344,16 @@ export default function InventoryPage() {
                   Search
                 </Button>
               </form>
-              <select
+              <Select
                 value={warehouseFilter}
                 onChange={(e) => { setWarehouseFilter(e.target.value); setPage(1); }}
-                className="w-48 flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-48"
               >
                 <option value="">All Warehouses</option>
                 {warehouses.map((wh) => (
                   <option key={wh.id} value={wh.id}>{wh.name}</option>
                 ))}
-              </select>
+              </Select>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -471,12 +471,12 @@ export default function InventoryPage() {
           <ModalContent className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Product *</label>
-              <select {...addForm.register("productId")} className={selectClass}>
+              <Select {...addForm.register("productId")} className="w-full">
                 <option value="">Select product</option>
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
                 ))}
-              </select>
+              </Select>
               {addForm.formState.errors.productId && (
                 <p className="text-sm text-red-500 mt-1">{addForm.formState.errors.productId.message}</p>
               )}
@@ -484,12 +484,12 @@ export default function InventoryPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
-              <select {...addForm.register("warehouseId")} className={selectClass}>
+              <Select {...addForm.register("warehouseId")} className="w-full">
                 <option value="">Select warehouse</option>
                 {warehouses.map((wh) => (
                   <option key={wh.id} value={wh.id}>{wh.name}</option>
                 ))}
-              </select>
+              </Select>
               {addForm.formState.errors.warehouseId && (
                 <p className="text-sm text-red-500 mt-1">{addForm.formState.errors.warehouseId.message}</p>
               )}
@@ -607,13 +607,13 @@ export default function InventoryPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Movement Type *</label>
-              <select {...movementForm.register("type")} className={selectClass}>
+              <Select {...movementForm.register("type")} className="w-full">
                 <option value="IN">Stock In</option>
                 <option value="OUT">Stock Out</option>
                 <option value="ADJUST">Adjustment</option>
                 <option value="TRANSFER">Transfer</option>
                 <option value="RETURN">Return</option>
-              </select>
+              </Select>
             </div>
 
             <div>
@@ -630,13 +630,13 @@ export default function InventoryPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Reference Type *</label>
-              <select {...movementForm.register("referenceType")} className={selectClass}>
+              <Select {...movementForm.register("referenceType")} className="w-full">
                 <option value="MANUAL">Manual</option>
                 <option value="PO">Purchase Order</option>
                 <option value="ORDER">Sales Order</option>
                 <option value="TRANSFER">Transfer</option>
                 <option value="RETURN">Return</option>
-              </select>
+              </Select>
             </div>
 
             <div>

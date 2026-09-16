@@ -49,7 +49,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
       />
       <div
         className={cn(
-          "relative z-50 w-full bg-white rounded-lg shadow-lg",
+          "relative z-50 w-full bg-white dark:bg-gray-50 rounded-lg shadow-lg",
           sizes[size],
           "max-h-[90vh] overflow-hidden flex flex-col"
         )}
