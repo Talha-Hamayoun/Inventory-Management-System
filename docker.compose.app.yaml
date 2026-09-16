@@ -1,0 +1,35 @@
+services:
+  inventory-management-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: inventory-management-backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      MAIN_DATABASE_URL: postgresql://postgres:NestPass123@host.docker.internal:5432/inventory?schema=public
+    ports:
+      - "5001:3010"
+    restart: always
+    env_file:
+      - ./backend/.env
+    networks:
+      - shared-net
+  inventory-management-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: inventory-management-frontend
+    ports:
+      - "5000:5000"
+    restart: always
+    env_file:
+      - ./frontend/.env
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:5001/api
+    networks:
+      - shared-net
+
+networks:
+  shared-net:
+    external: true

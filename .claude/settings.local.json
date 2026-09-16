@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun add sonner)",
+      "Bash(bunx prisma migrate dev --name add_supplier_fields --schema=prisma/main-db/schema.prisma)",
+      "Bash(bunx prisma db push --schema=prisma/main-db/schema.prisma)",
+      "Bash(bunx prisma db push --schema=prisma/main-db/schema.prisma --accept-data-loss)",
+      "Bash(bunx prisma:*)",
+      "Bash(echo 'UPDATE \"\"Supplier\"\" SET code = '\"''\"'SUP-00'\"''\"' || id::text WHERE code = '\"''\"''\"''\"';')",
+      "Bash(__NEW_LINE_6716398be25e0f96__ cat)",
+      "Bash(node write_alerts_page.mjs)",
+      "Bash(node -e \":*)",
+      "Bash(node fix_returns.mjs)",
+      "Bash(bunx tsc --noEmit)",
+      "Bash(npx tsc --noEmit)",
+      "Bash(\"w:/Vynodev IT Work/Inventory Management/inventory-management-system/frontend/src/app/returns/[id]/page.tsx\")",
+      "Bash(bun add recharts)",
+      "Bash(__NEW_LINE_ff6cf5b0407fbd04__ cat)"
+    ],
+    "additionalDirectories": [
+      "w:\\Vynodev IT Work\\Inventory Management\\inventory-management-system\\backend"
+    ]
+  }
+}

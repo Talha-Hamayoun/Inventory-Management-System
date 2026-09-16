@@ -1,0 +1,34 @@
+{
+  "name": "inventory-management-api",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start:watch": "bun run --hot dist/index.js",
+    "type-check": "tsc --noEmit --watch --preserveWatchOutput",
+    "db:generate": "npx prisma generate --schema=./prisma/main-db/schema.prisma",
+    "db:push": "npx prisma db push --schema=./prisma/main-db/schema.prisma",
+    "db:migrate": "npx prisma migrate dev --schema=./prisma/main-db/schema.prisma",
+    "db:migrate:prod": "npx prisma migrate deploy --schema=./prisma/main-db/schema.prisma",
+    "db:reset": "npx prisma migrate reset --schema=./prisma/main-db/schema.prisma --force",
+    "db:seed": "bun run prisma/main-db/seed.ts",
+    "db:studio": "npx prisma studio --schema=./prisma/main-db/schema.prisma",
+    "db:setup": "bun run db:push && bun run db:generate && bun run db:seed"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.6",
+    "@prisma/adapter-pg": "6.19.0",
+    "@prisma/client": "6.19.0",
+    "bcryptjs": "^3.0.3",
+    "hashids": "^2.3.0",
+    "hono": "^4.11.4",
+    "prisma": "6.19.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/bun": "latest"
+  }
+}
