@@ -101,10 +101,12 @@ function VerifyEmailForm() {
             <Image
               src="/Logo2.png"
               alt="AutoLine"
-              width={280}
-              height={56}
+              width={2172}
+              height={724}
               className="h-14 w-auto max-w-60 object-contain"
+              style={{ width: "auto", height: "3.5rem" }}
               priority
+              unoptimized
             />
           </div>
           <CardTitle className="text-2xl">{verified ? "Request submitted" : "Verify Email"}</CardTitle>

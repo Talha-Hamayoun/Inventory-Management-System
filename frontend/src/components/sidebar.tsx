@@ -78,33 +78,33 @@ export function Sidebar({
 
       <aside
         className={cn(
-          "fixed top-0 left-0 z-40 h-screen w-64 text-white transition-transform duration-300 lg:translate-x-0",
-          "bg-[#0b1220]/90 backdrop-blur-2xl border-r border-white/10 shadow-2xl shadow-black/20",
+          "fixed top-0 left-0 z-40 h-screen w-64 overflow-hidden text-white transition-transform duration-300 lg:translate-x-0",
+          "bg-[#0b1220]/95 backdrop-blur-2xl border-r border-white/10 shadow-2xl shadow-black/20",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="px-4 pt-5 pb-4">
-            <div className="flex items-center justify-between">
-              <Link href="/dashboard" className="min-w-0 flex-1">
-                <Image
-                  src="/Logo1.png"
-                  alt="AutoLine"
-                  width={280}
-                  height={56}
-                  className="h-14 max-w-full object-contain"
-                  priority
-                />
-              </Link>
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="lg:hidden h-8 w-8 shrink-0 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 cursor-pointer"
-                aria-label="Close menu"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+          <div className="relative px-4 pt-5 pb-4">
+            <Link href="/dashboard" className="mx-auto flex h-14 w-full items-center justify-center overflow-hidden">
+              <Image
+                src="/Logo1.png"
+                alt="AutoLine"
+                width={2172}
+                height={724}
+                className="h-14 w-auto max-h-14 max-w-full object-contain"
+                style={{ width: "auto", height: "4rem" }}
+                priority
+                unoptimized
+              />
+            </Link>
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="lg:hidden absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 shrink-0 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 cursor-pointer"
+              aria-label="Close menu"
+            >
+              <X className="h-4 w-4" />
+            </button>
           </div>
 
           <nav className="flex-1 overflow-y-auto sidebar-scroll px-3 pb-3">
@@ -154,7 +154,7 @@ export function Sidebar({
                           href={item.href}
                           onClick={() => onOpenChange(false)}
                           className={cn(
-                            "group relative flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 text-[13px] font-medium transition-all duration-200 cursor-pointer",
+                            "group relative flex min-w-0 items-center gap-3 rounded-xl px-2.5 py-1.5 text-[13px] font-medium transition-all duration-200 cursor-pointer",
                             active
                               ? "bg-blue-600 text-white shadow-lg shadow-blue-600/25"
                               : "text-white/65 hover:text-white hover:bg-white/8"
@@ -166,7 +166,7 @@ export function Sidebar({
                               active ? "text-white" : "text-white/45 group-hover:text-white/80"
                             )}
                           />
-                          <span className="truncate">{item.name}</span>
+                          <span className="min-w-0 truncate">{item.name}</span>
                         </Link>
                       </li>
                     );
@@ -188,31 +188,28 @@ export function Sidebar({
                 </div>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-1.5">
+              <div className="mt-3 space-y-1">
                 {hasPermission("*") && (
                   <Link
                     href="/settings"
                     onClick={() => onOpenChange(false)}
                     className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium transition-colors",
+                      "flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium transition-colors",
                       pathname === "/settings"
                         ? "bg-blue-600 text-white"
                         : "text-white/70 hover:text-white hover:bg-white/10"
                     )}
                   >
-                    <Settings className="h-3.5 w-3.5" />
+                    <Settings className="h-3.5 w-3.5 shrink-0" />
                     Settings
                   </Link>
                 )}
                 <button
                   type="button"
                   onClick={logout}
-                  className={cn(
-                    "flex items-center justify-center gap-1.5 rounded-lg px-2 py-2 text-xs font-medium text-white/70 hover:text-red-200 hover:bg-red-500/15 transition-colors cursor-pointer",
-                    !hasPermission("*") && "col-span-2"
-                  )}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs font-medium text-white/70 hover:text-red-200 hover:bg-red-500/15 transition-colors cursor-pointer"
                 >
-                  <LogOut className="h-3.5 w-3.5" />
+                  <LogOut className="h-3.5 w-3.5 shrink-0" />
                   Logout
                 </button>
               </div>

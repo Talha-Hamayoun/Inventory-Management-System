@@ -31,10 +31,12 @@ export default function Home() {
             <Image
               src="/Logo2.png"
               alt="AutoLine"
-              width={280}
-              height={56}
-              className="h-14 w-auto object-contain"
+              width={2172}
+              height={724}
+              className="h-14 w-auto max-w-full object-contain"
+              style={{ width: "auto", height: "3.5rem" }}
               priority
+              unoptimized
             />
           </div>
           <div className="flex gap-4">

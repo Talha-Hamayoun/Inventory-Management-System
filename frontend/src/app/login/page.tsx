@@ -67,10 +67,12 @@ export default function LoginPage() {
             <Image
               src="/Logo2.png"
               alt="AutoLine"
-              width={280}
-              height={56}
+              width={2172}
+              height={724}
               className="h-14 w-auto max-w-60 object-contain"
+              style={{ width: "auto", height: "3.5rem" }}
               priority
+              unoptimized
             />
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
@@ -106,13 +108,14 @@ export default function LoginPage() {
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
+                  className="pr-10"
                   {...register("password")}
                   error={errors.password?.message}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
+                  className="absolute right-3 top-1/2 z-10 -translate-y-1/2 text-gray-500 hover:text-gray-700 cursor-pointer"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
