@@ -1,15 +1,17 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/src/lib/utils";
 import { Button } from "./button";
 
 interface PaginationProps {
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
+  className?: string;
 }
 
-export function Pagination({ page, totalPages, onPageChange }: PaginationProps) {
+export function Pagination({ page, totalPages, onPageChange, className }: PaginationProps) {
   if (totalPages <= 1) return null;
 
   const pages = [];
@@ -26,10 +28,11 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
   }
 
   return (
-    <div className="flex items-center justify-center gap-1 mt-4">
+    <div className={cn("flex items-center justify-end gap-1", className)}>
       <Button
         variant="outline"
         size="icon"
+        className="h-8 w-8 rounded-lg"
         onClick={() => onPageChange(page - 1)}
         disabled={page <= 1}
       >
@@ -41,11 +44,12 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
           <Button
             variant={page === 1 ? "default" : "outline"}
             size="sm"
+            className="h-8 min-w-8 rounded-lg px-2.5"
             onClick={() => onPageChange(1)}
           >
             1
           </Button>
-          {startPage > 2 && <span className="px-2">...</span>}
+          {startPage > 2 && <span className="px-1 text-gray-400 text-sm">…</span>}
         </>
       )}
 
@@ -54,6 +58,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
           key={p}
           variant={page === p ? "default" : "outline"}
           size="sm"
+          className="h-8 min-w-8 rounded-lg px-2.5"
           onClick={() => onPageChange(p)}
         >
           {p}
@@ -62,10 +67,11 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
 
       {endPage < totalPages && (
         <>
-          {endPage < totalPages - 1 && <span className="px-2">...</span>}
+          {endPage < totalPages - 1 && <span className="px-1 text-gray-400 text-sm">…</span>}
           <Button
             variant={page === totalPages ? "default" : "outline"}
             size="sm"
+            className="h-8 min-w-8 rounded-lg px-2.5"
             onClick={() => onPageChange(totalPages)}
           >
             {totalPages}
@@ -76,6 +82,7 @@ export function Pagination({ page, totalPages, onPageChange }: PaginationProps) 
       <Button
         variant="outline"
         size="icon"
+        className="h-8 w-8 rounded-lg"
         onClick={() => onPageChange(page + 1)}
         disabled={page >= totalPages}
       >

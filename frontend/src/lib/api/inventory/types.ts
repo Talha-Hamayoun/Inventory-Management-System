@@ -6,6 +6,7 @@ export interface InventoryProduct {
   id: string;
   name: string;
   sku: string;
+  barcode?: string | null;
   unitOfMeasure?: string;
 }
 

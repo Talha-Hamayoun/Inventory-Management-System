@@ -3,12 +3,13 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent } from "@/src/components/ui/card";
+import { Select } from "@/src/components/ui/select";
+import { DataTable } from "@/src/components/ui/data-table";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
 import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "@/src/components/ui/modal";
 import { Pagination } from "@/src/components/ui/pagination";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableIconButton, TableRow, tableIconButtonClass } from "@/src/components/ui/table";
 import { categoriesApi, productsApi } from "@/src/lib/api";
 import { toast } from "sonner";
 import { formatDateTime } from "@/src/lib/utils";
@@ -152,6 +153,7 @@ export default function ProductsPage() {
     return <Badge variant={variants[productStatus] || "default"}>{productStatus}</Badge>;
   };
 
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -161,31 +163,31 @@ export default function ProductsPage() {
             <p className="text-gray-600">Manage your product catalog</p>
           </div>
           <Link href="/products/new" className="cursor-pointer">
-            <Button className="gap-2">
+            <Button className="gap-2 rounded-xl">
               <Plus className="h-4 w-4" />
               Add Product
             </Button>
           </Link>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardContent className="pt-6">
-            <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
+        <DataTable
+          toolbar={
+            <form onSubmit={handleSearch} className="flex flex-wrap items-center gap-3">
               <div className="flex-1 min-w-50">
                 <Input
                   placeholder="Search products..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
+                  className="rounded-xl h-10"
                 />
               </div>
-              <select
+              <Select
                 value={categoryId}
                 onChange={(e) => {
                   setCategoryId(e.target.value);
                   setPage(1);
                 }}
-                className="w-48 flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-48"
               >
                 <option value="">All Categories</option>
                 {categories.map((cat) => (
@@ -193,136 +195,139 @@ export default function ProductsPage() {
                     {cat.name}
                   </option>
                 ))}
-              </select>
-              <select
+              </Select>
+              <Select
                 value={status}
                 onChange={(e) => {
                   setStatus(e.target.value);
                   setPage(1);
                 }}
-                className="w-40 flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-40"
               >
                 <option value="">All Status</option>
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
                 <option value="ARCHIVED">Archived</option>
-              </select>
-              <Button type="submit" variant="outline" className="gap-2">
+              </Select>
+              <Button type="submit" variant="outline" className="gap-2 rounded-xl h-10">
                 <Search className="h-4 w-4" />
                 Search
               </Button>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Products Table */}
-        <Card>
-          <CardContent className="pt-6">
-            {selectedProductIds.length > 0 && (
-              <div className="mb-4 flex items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-3">
-                <span className="text-sm font-medium text-red-800">
+          }
+          banner={
+            selectedProductIds.length > 0 ? (
+              <div className="flex items-center justify-between px-5 py-2.5 bg-blue-50/80 dark:bg-blue-500/10 border-b border-blue-100 dark:border-blue-500/20">
+                <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
                   {selectedProductIds.length} product{selectedProductIds.length === 1 ? "" : "s"} selected
                 </span>
-                <Button variant="destructive" size="sm" className="gap-2" onClick={() => setShowBulkDeleteModal(true)}>
+                <Button variant="destructive" size="sm" className="gap-2 rounded-lg h-8" onClick={() => setShowBulkDeleteModal(true)}>
                   <Trash2 className="h-4 w-4" />
                   Delete Selected
                 </Button>
               </div>
-            )}
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loading size="lg" />
-              </div>
-            ) : products.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No products found. Create your first product to get started.
-              </div>
-            ) : (
-              <>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">
-                        <button
-                          type="button"
-                          aria-label={allProductsSelected ? "Deselect all products" : "Select all products"}
-                          onClick={toggleSelectAll}
-                          className={`flex h-5 w-5 items-center justify-center rounded border ${allProductsSelected ? "border-blue-600 bg-blue-600 text-white" : "border-gray-300 bg-white"}`}
+            ) : null
+          }
+          loading={loading}
+          empty={products.length === 0 ? "No products found. Create your first product to get started." : undefined}
+          footer={
+            products.length > 0 ? (
+              <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+            ) : undefined
+          }
+        >
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-12">
+                  <button
+                    type="button"
+                    aria-label={allProductsSelected ? "Deselect all products" : "Select all products"}
+                    onClick={toggleSelectAll}
+                    className={`flex h-4.5 w-4.5 items-center justify-center rounded-md border transition-colors ${allProductsSelected ? "border-blue-600 bg-blue-600 text-white" : "border-gray-300 bg-white hover:border-blue-400"}`}
+                  >
+                    {allProductsSelected && <Check className="h-3 w-3" />}
+                  </button>
+                </TableHead>
+                <TableHead>Product</TableHead>
+                <TableHead>SKU</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Cost</TableHead>
+                <TableHead>Selling</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {products.map((product) => {
+                const selected = selectedProductIds.includes(product.id);
+                return (
+                  <TableRow key={product.id} data-state={selected ? "selected" : undefined}>
+                    <TableCell>
+                      <button
+                        type="button"
+                        aria-label={`${selected ? "Deselect" : "Select"} ${product.name}`}
+                        onClick={() => toggleProductSelection(product.id)}
+                        className={`flex h-4.5 w-4.5 items-center justify-center rounded-md border transition-colors ${selected ? "border-blue-600 bg-blue-600 text-white" : "border-gray-300 bg-white hover:border-blue-400"}`}
+                      >
+                        {selected && <Check className="h-3 w-3" />}
+                      </button>
+                    </TableCell>
+                    <TableCell>
+                      <div className="min-w-44 max-w-64">
+                        <p className="font-medium text-gray-900 leading-tight truncate">{product.name}</p>
+                        <p className="text-[11px] text-gray-400 font-mono mt-0.5">{product.productNumber}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="inline-flex max-w-44 truncate rounded-md bg-gray-100 px-2 py-0.5 font-mono text-[11px] text-gray-600 ring-1 ring-gray-200/70">
+                        {product.sku}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-gray-600">{product.category?.name || "—"}</TableCell>
+                    <TableCell className="tabular-nums text-gray-600">
+                      {product.costPrice != null ? `Rs. ${Number(product.costPrice).toLocaleString()}` : "—"}
+                    </TableCell>
+                    <TableCell className="tabular-nums font-medium text-gray-900">
+                      {product.sellingPrice != null ? `Rs. ${Number(product.sellingPrice).toLocaleString()}` : "—"}
+                    </TableCell>
+                    <TableCell>{getStatusBadge(product.status)}</TableCell>
+                    <TableCell className="text-gray-400 text-xs whitespace-nowrap">
+                      {formatDateTime(product.createdAt)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex justify-end items-center gap-0.5">
+                        <Link
+                          href={`/products/${product.id}`}
+                          aria-label={`View ${product.name}`}
+                          className={tableIconButtonClass()}
                         >
-                          {allProductsSelected && <Check className="h-3.5 w-3.5" />}
-                        </button>
-                      </TableHead>
-                      <TableHead>Product #</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>SKU</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Cost Price</TableHead>
-                      <TableHead>Selling Price</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Created</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {products.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <button
-                            type="button"
-                            aria-label={`${selectedProductIds.includes(product.id) ? "Deselect" : "Select"} ${product.name}`}
-                            onClick={() => toggleProductSelection(product.id)}
-                            className={`flex h-5 w-5 items-center justify-center rounded border ${selectedProductIds.includes(product.id) ? "border-blue-600 bg-blue-600 text-white" : "border-gray-300 bg-white"}`}
-                          >
-                            {selectedProductIds.includes(product.id) && <Check className="h-3.5 w-3.5" />}
-                          </button>
-                        </TableCell>
-                        <TableCell className="font-mono text-sm text-gray-500">{product.productNumber}</TableCell>
-                        <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell className="text-gray-500">{product.sku}</TableCell>
-                        <TableCell>{product.category?.name || "-"}</TableCell>
-                        <TableCell className="text-gray-700">{product.costPrice != null ? `Rs. ${Number(product.costPrice).toLocaleString()}` : "-"}</TableCell>
-                        <TableCell className="text-gray-700">{product.sellingPrice != null ? `Rs. ${Number(product.sellingPrice).toLocaleString()}` : "-"}</TableCell>
-                        <TableCell>{getStatusBadge(product.status)}</TableCell>
-                        <TableCell className="text-gray-500">
-                          {formatDateTime(product.createdAt)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-end gap-2">
-                            <Link href={`/products/${product.id}`} className="cursor-pointer">
-                              <Button variant="ghost" size="sm">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Link href={`/products/${product.id}/edit`} className="cursor-pointer">
-                              <Button variant="ghost" size="sm">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </Link>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDeleteClick(product)}
-                              disabled={deleting === product.id}
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="mt-4">
-                  <Pagination
-                    page={page}
-                    totalPages={totalPages}
-                    onPageChange={setPage}
-                  />
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                          <Eye className="h-4 w-4" />
+                        </Link>
+                        <Link
+                          href={`/products/${product.id}/edit`}
+                          aria-label={`Edit ${product.name}`}
+                          className={tableIconButtonClass()}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Link>
+                        <TableIconButton
+                          tone="danger"
+                          aria-label={`Delete ${product.name}`}
+                          onClick={() => handleDeleteClick(product)}
+                          disabled={deleting === product.id}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </TableIconButton>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </DataTable>
       </div>
 
       {/* Delete Confirmation Modal */}

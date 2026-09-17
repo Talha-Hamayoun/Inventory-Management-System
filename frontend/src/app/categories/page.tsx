@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Input } from "@/src/components/ui/input";
 import { Badge } from "@/src/components/ui/badge";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/src/components/ui/table";
@@ -384,7 +385,7 @@ export default function CategoriesPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Parent Category
               </label>
-              <select {...register("parentId")} className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50">
+              <Select {...register("parentId")} className="w-full">
                 <option value="">No parent (top-level)</option>
                 {allCategories
                   .filter((c) => c.id !== editingCategory?.id)
@@ -393,7 +394,7 @@ export default function CategoriesPage() {
                       {cat.name}
                     </option>
                   ))}
-              </select>
+              </Select>
             </div>
 
             <div>

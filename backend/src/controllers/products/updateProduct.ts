@@ -44,9 +44,26 @@ export async function updateProductController(c: Context) {
       return c.json({ success: false, message: "SKU already exists" }, 400);
     }
 
+    const barcode = data.barcode !== undefined ? (data.barcode.trim() || null) : undefined;
+    if (barcode) {
+      const duplicateBarcode = await prisma.product.findFirst({
+        where: {
+          barcode,
+          NOT: { id },
+        },
+      });
+      if (duplicateBarcode) {
+        return c.json({ success: false, message: "Barcode already exists" }, 400);
+      }
+    }
+
     const product = await prisma.product.update({
       where: { id },
-      data: { ...data, categoryId },
+      data: {
+        ...data,
+        categoryId,
+        ...(barcode !== undefined ? { barcode } : {}),
+      },
       include: {
         category: { select: { id: true, name: true } },
       },

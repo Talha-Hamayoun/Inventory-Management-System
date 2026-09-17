@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -146,31 +147,31 @@ export function ProductForm({ productId, categories, initialData, backUrl }: Pro
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Status *</label>
-                                <select {...register("status")} className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                <Select {...register("status")} className="w-full">
                                     <option value="ACTIVE">Active</option>
                                     <option value="INACTIVE">Inactive</option>
                                     <option value="ARCHIVED">Archived</option>
-                                </select>
+                                </Select>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                                <select {...register("categoryId")} className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                <Select {...register("categoryId")} className="w-full">
                                     <option value="">Select a Category</option>
                                     {categories.map((cat) => (
                                         <option key={cat.id} value={cat.id}>{cat.name}</option>
                                     ))}
-                                </select>
+                                </Select>
                                 {errors.categoryId && <p className="text-sm text-red-500 mt-1">{errors.categoryId.message}</p>}
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Unit of Measure *</label>
-                                <select {...register("unitOfMeasure")} className="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent">
+                                <Select {...register("unitOfMeasure")} className="w-full">
                                     <option value="PCS">Pieces</option>
                                     <option value="KG">Kilogram</option>
                                     <option value="LITERS">Liters</option>
                                     <option value="METERS">Meters</option>
                                     <option value="BOXES">Boxes</option>
-                                </select>
+                                </Select>
                             </div>
                         </div>
                         <div>

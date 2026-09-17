@@ -10,7 +10,9 @@ import { authApi } from "@/src/lib/api";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/src/components/ui/card";
-import { Package, Loader2 } from "lucide-react";
+import { LayoutBackground } from "@/src/components/layout-background";
+import { Loader2 } from "lucide-react";
+import Image from "next/image";
 
 const registerSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -48,30 +50,23 @@ export default function RegisterPage() {
         password: data.password,
       });
 
-      // Check if response has data
-      if (response.data) {
-        // Type narrowing using 'success' property
-        if (response.data.success === true) {
-          // Success case - response.data is { success: true } & { data: RegisterResponseData }
-          router.push("/dashboard");
-        } else if (response.data.success === false) {
-          // Error case - response.data is { success: false; message: string; ... }
-          setError(response.data.message || "Registration failed. Please try again.");
-        } else {
-          setError("Registration failed. Please try again.");
-        }
-      } else if (response.error) {
-        // Handle error case
-        if (response.error instanceof Error) {
-          setError(response.error.message);
-        } else {
-          setError("Registration failed. Please try again.");
-        }
-      } else {
-        setError("Unexpected response from server.");
+      if (response.data && response.data.success === true) {
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
       }
+
+      if (response.data && response.data.success === false) {
+        setError(response.data.message || "Registration failed. Please try again.");
+        return;
+      }
+
+      if (response.error instanceof Error) {
+        setError(response.error.message);
+        return;
+      }
+
+      setError("Registration failed. Please try again.");
     } catch (err: unknown) {
-      // Handle different error types
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -83,13 +78,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <main className="min-h-screen relative flex items-center justify-center p-4">
+      <LayoutBackground overlay="dark" />
+      <Card className="relative z-10 w-full max-w-md bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm shadow-xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Package className="h-6 w-6 text-white" />
-            </div>
+            <Image
+              src="/Logo2.png"
+              alt="AutoLine"
+              width={280}
+              height={56}
+              className="h-14 w-auto max-w-60 object-contain"
+              priority
+            />
           </div>
           <CardTitle className="text-2xl">Create an account</CardTitle>
           <CardDescription>Get started with Inventory Management</CardDescription>

@@ -43,6 +43,8 @@ import { login } from "./api/auth/login";
 import { logout } from "./api/auth/logout";
 import { me } from "./api/auth/me";
 import { register } from "./api/auth/register";
+import { verifyOtp } from "./api/auth/verify-otp";
+import { resendOtp } from "./api/auth/resend-otp";
 import {
   createCategory,
   type CreateCategoryRequest,
@@ -80,6 +82,8 @@ import {
 import { deleteProduct } from "./api/products/delete";
 import { bulkDeleteProducts } from "./api/products/bulk-delete";
 import { getProduct } from "./api/products/get";
+import { generateProductBarcode } from "./api/products/generate-barcode";
+import { lookupProductByBarcode } from "./api/products/lookup-barcode";
 import { listProducts } from "./api/products/list";
 import {
   updateProduct,
@@ -135,6 +139,8 @@ import { deleteUser } from "./api/users/delete";
 import { getUser } from "./api/users/get";
 import { listUsers } from "./api/users/list";
 import { updateUser, type UpdateUserRequest } from "./api/users/update";
+import { approveUser } from "./api/users/approve";
+import { rejectUser } from "./api/users/reject";
 import {
   createWarehouse,
   type CreateWarehouseRequest,
@@ -192,6 +198,8 @@ export const authApi = {
   login: (data: { email: string; password: string }) => login(data),
   register: (data: { name: string; email: string; password: string }) =>
     register(data),
+  verifyOtp: (data: { email: string; otp: string }) => verifyOtp(data),
+  resendOtp: (data: { email: string }) => resendOtp(data),
   logout: () => logout(),
   me: () => me(),
 };
@@ -206,6 +214,9 @@ export const productsApi = {
     status?: string;
   }) => listProducts(params),
   get: (id: string) => getProduct(id),
+  lookupByBarcode: (barcode: string, warehouseId: string) =>
+    lookupProductByBarcode(barcode, warehouseId),
+  generateBarcode: (id: string) => generateProductBarcode(id),
   create: (data: CreateProductRequest) => createProduct(data),
   update: (id: string, data: UpdateProductRequest) => updateProduct(id, data),
   delete: (id: string) => deleteProduct(id),
@@ -397,9 +408,16 @@ export const usersApi = {
     limit?: number;
     search?: string;
     roleId?: string;
+    accountStatus?:
+      | "PENDING_EMAIL_VERIFICATION"
+      | "PENDING_APPROVAL"
+      | "APPROVED"
+      | "REJECTED";
   }) => listUsers(params),
   get: (id: string) => getUser(id),
   update: (id: string, data: UpdateUserRequest) => updateUser(id, data),
+  approve: (id: string) => approveUser(id),
+  reject: (id: string, data?: { reason?: string }) => rejectUser(id, data),
   delete: (id: string) => deleteUser(id),
 };
 

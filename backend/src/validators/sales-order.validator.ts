@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+export const paymentMethodEnum = z.enum([
+  "CASH",
+  "COD",
+  "JAZZCASH",
+  "EASYPAISA",
+  "BANK_TRANSFER",
+  "CARD",
+  "UPI",
+]);
+
+export const discountTypeEnum = z.enum(["FIXED", "PERCENTAGE"]);
+
 const salesOrderItemSchema = z.object({
   productId: z.string().min(1, "Product is required"),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
@@ -11,6 +23,10 @@ export const createSalesOrderSchema = z.object({
   warehouseId: z.string().min(1, "Warehouse is required"),
   notes: z.string().optional(),
   items: z.array(salesOrderItemSchema).min(1, "At least one item is required"),
+  paymentMethod: paymentMethodEnum.optional(),
+  amountPaid: z.coerce.number().min(0, "Amount paid must be non-negative").optional(),
+  discountType: discountTypeEnum.optional(),
+  discountValue: z.coerce.number().min(0, "Discount cannot be negative").optional(),
 });
 
 export const updateSalesOrderSchema = z.object({
@@ -18,6 +34,8 @@ export const updateSalesOrderSchema = z.object({
   warehouseId: z.string().optional(),
   notes: z.string().optional(),
   items: z.array(salesOrderItemSchema).min(1).optional(),
+  discountType: discountTypeEnum.nullable().optional(),
+  discountValue: z.coerce.number().min(0, "Discount cannot be negative").optional(),
 });
 
 export const updateSalesOrderStatusSchema = z.object({
@@ -26,7 +44,7 @@ export const updateSalesOrderStatusSchema = z.object({
 
 export const updatePaymentSchema = z.object({
   amountPaid: z.coerce.number().min(0, "Amount paid must be non-negative"),
-  paymentMethod: z.enum(["CASH", "COD", "JAZZCASH", "EASYPAISA", "BANK_TRANSFER"]).optional(),
+  paymentMethod: paymentMethodEnum.optional(),
 });
 
 export const salesOrderQuerySchema = z.object({

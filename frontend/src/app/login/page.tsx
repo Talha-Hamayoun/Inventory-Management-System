@@ -10,7 +10,9 @@ import { useAuth } from "@/src/lib/auth-context";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/src/components/ui/card";
-import { Package, Loader2, Eye, EyeOff } from "lucide-react";
+import { LayoutBackground } from "@/src/components/layout-background";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email"),
@@ -29,22 +31,24 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
+  const emailValue = watch("email");
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     setError("");
 
     try {
-      const success = await login(data.email, data.password);
+      const result = await login(data.email, data.password);
 
-      if (success) {
+      if (result.success) {
         router.push("/dashboard");
       } else {
-        setError("Login failed. Please try again.");
+        setError(result.message || "Login failed. Please try again.");
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
@@ -55,13 +59,19 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
+    <main className="min-h-screen relative flex items-center justify-center p-4">
+      <LayoutBackground overlay="dark" />
+      <Card className="relative z-10 w-full max-w-md bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm shadow-xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Package className="h-6 w-6 text-white" />
-            </div>
+            <Image
+              src="/Logo2.png"
+              alt="AutoLine"
+              width={280}
+              height={56}
+              className="h-14 w-auto max-w-60 object-contain"
+              priority
+            />
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your account to continue</CardDescription>
@@ -69,8 +79,16 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {error}
+              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm space-y-2">
+                <p>{error}</p>
+                {error.toLowerCase().includes("verify your email") && (
+                  <Link
+                    href={`/verify-email?email=${encodeURIComponent(emailValue || "")}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Verify email
+                  </Link>
+                )}
               </div>
             )}
             <div>

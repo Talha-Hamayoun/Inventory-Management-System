@@ -3,31 +3,22 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
 import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "@/src/components/ui/modal";
 import { Pagination } from "@/src/components/ui/pagination";
-// ...existing code...
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/src/components/ui/table";
 import { rolesApi, usersApi } from "@/src/lib/api";
+import type { AccountStatus, User } from "@/src/lib/api/users/list";
 import { toast } from "sonner";
 import { formatDateTime } from "@/src/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Edit, Search, UserX, Users } from "lucide-react";
+import { Check, Edit, Search, UserX, Users, X } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  isActive: boolean;
-  role: { id: string; name: string } | null;
-  createdAt: string;
-  lastLoginAt?: string;
-}
 
 interface Role {
   id: string;
@@ -43,18 +34,37 @@ const userSchema = z.object({
 
 type UserFormData = z.infer<typeof userSchema>;
 
+const STATUS_LABELS: Record<AccountStatus, string> = {
+  PENDING_EMAIL_VERIFICATION: "Pending Email",
+  PENDING_APPROVAL: "Pending Approval",
+  APPROVED: "Approved",
+  REJECTED: "Rejected",
+};
+
+function statusBadgeVariant(status: AccountStatus, isActive: boolean): "success" | "warning" | "error" | "info" {
+  if (status === "APPROVED") return isActive ? "success" : "error";
+  if (status === "REJECTED") return "error";
+  if (status === "PENDING_APPROVAL") return "warning";
+  return "info";
+}
+
 export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<AccountStatus | "">("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [saving, setSaving] = useState(false);
   const [deactivating, setDeactivating] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [rejectingUser, setRejectingUser] = useState<User | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejecting, setRejecting] = useState(false);
 
   const {
     register,
@@ -76,6 +86,7 @@ export default function UsersPage() {
         limit: 10,
         search: search || undefined,
         roleId: roleFilter || undefined,
+        accountStatus: statusFilter || undefined,
       });
       if (!response.data || response.error) {
         console.error("Failed to fetch users:", response.error);
@@ -88,7 +99,7 @@ export default function UsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, roleFilter, search]);
+  }, [page, roleFilter, search, statusFilter]);
 
   const fetchRoles = async () => {
     try {
@@ -173,17 +184,55 @@ export default function UsersPage() {
     }
   };
 
+  const handleApprove = async (user: User) => {
+    setApprovingId(user.id);
+    try {
+      const response = await usersApi.approve(user.id);
+      if (!response.data || response.error) {
+        toast.error("Failed to approve user");
+      } else if (response.data.success === false) {
+        toast.error(response.data.message || "Failed to approve user");
+      } else {
+        toast.success("User approved. An email notification has been sent.");
+        fetchUsers();
+      }
+    } finally {
+      setApprovingId(null);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!rejectingUser) return;
+    setRejecting(true);
+    try {
+      const response = await usersApi.reject(rejectingUser.id, {
+        reason: rejectReason.trim() || undefined,
+      });
+      if (!response.data || response.error) {
+        toast.error("Failed to reject user");
+      } else if (response.data.success === false) {
+        toast.error(response.data.message || "Failed to reject user");
+      } else {
+        toast.success("User rejected. An email notification has been sent.");
+        setRejectingUser(null);
+        setRejectReason("");
+        fetchUsers();
+      }
+    } finally {
+      setRejecting(false);
+    }
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Users</h1>
-            <p className="text-gray-600">Manage system users</p>
+            <p className="text-gray-600">Manage system users and pending account requests</p>
           </div>
         </div>
 
-        {/* Filters */}
         <Card>
           <CardContent className="pt-6">
             <form onSubmit={handleSearch} className="flex flex-wrap gap-4">
@@ -194,13 +243,13 @@ export default function UsersPage() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <select
+              <Select
                 value={roleFilter}
                 onChange={(e) => {
                   setRoleFilter(e.target.value);
                   setPage(1);
                 }}
-                className="w-48 flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50"
+                className="w-48"
               >
                 <option value="">All Roles</option>
                 {roles.map((role) => (
@@ -208,7 +257,21 @@ export default function UsersPage() {
                     {role.name}
                   </option>
                 ))}
-              </select>
+              </Select>
+              <Select
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value as AccountStatus | "");
+                  setPage(1);
+                }}
+                className="w-52"
+              >
+                <option value="">All Statuses</option>
+                <option value="PENDING_EMAIL_VERIFICATION">Pending Email</option>
+                <option value="PENDING_APPROVAL">Pending Approval</option>
+                <option value="APPROVED">Approved</option>
+                <option value="REJECTED">Rejected</option>
+              </Select>
               <Button type="submit" variant="outline" className="gap-2">
                 <Search className="h-4 w-4" />
                 Search
@@ -217,7 +280,6 @@ export default function UsersPage() {
           </CardContent>
         </Card>
 
-        {/* Users Table */}
         <Card>
           <CardContent className="pt-6">
             {loading ? (
@@ -236,10 +298,11 @@ export default function UsersPage() {
                     <TableRow>
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Email Verified</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Request Date</TableHead>
                       <TableHead>Last Login</TableHead>
-                      <TableHead>Created</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -249,21 +312,53 @@ export default function UsersPage() {
                         <TableCell className="font-medium">{user.name}</TableCell>
                         <TableCell className="text-gray-500">{user.email}</TableCell>
                         <TableCell>
+                          <Badge variant={user.emailVerified ? "success" : "warning"}>
+                            {user.emailVerified ? "Verified" : "Unverified"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
                           <Badge variant="info">{user.role?.name ?? "—"}</Badge>
                         </TableCell>
                         <TableCell>
-                          <Badge variant={user.isActive ? "success" : "error"}>
-                            {user.isActive ? "Active" : "Inactive"}
+                          <Badge variant={statusBadgeVariant(user.accountStatus, user.isActive)}>
+                            {user.accountStatus === "APPROVED" && !user.isActive
+                              ? "Inactive"
+                              : STATUS_LABELS[user.accountStatus]}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-gray-500">
-                          {user.lastLoginAt ? formatDateTime(user.lastLoginAt) : "Never"}
                         </TableCell>
                         <TableCell className="text-gray-500">
                           {formatDateTime(user.createdAt)}
                         </TableCell>
+                        <TableCell className="text-gray-500">
+                          {user.lastLoginAt ? formatDateTime(user.lastLoginAt) : "Never"}
+                        </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
+                            {user.accountStatus === "PENDING_APPROVAL" && user.emailVerified && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleApprove(user)}
+                                disabled={approvingId === user.id}
+                                title="Approve"
+                              >
+                                <Check className="h-4 w-4 text-green-600" />
+                              </Button>
+                            )}
+                            {(user.accountStatus === "PENDING_APPROVAL" ||
+                              user.accountStatus === "PENDING_EMAIL_VERIFICATION") && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setRejectingUser(user);
+                                  setRejectReason("");
+                                }}
+                                title="Reject"
+                              >
+                                <X className="h-4 w-4 text-red-500" />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
@@ -271,7 +366,7 @@ export default function UsersPage() {
                             >
                               <Edit className="h-4 w-4" />
                             </Button>
-                            {user.isActive && (
+                            {user.accountStatus === "APPROVED" && user.isActive && (
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -300,7 +395,6 @@ export default function UsersPage() {
         </Card>
       </div>
 
-      {/* Edit User Modal */}
       <Modal isOpen={showModal} onClose={handleCloseModal}>
         <ModalHeader>
           <ModalTitle>Edit User</ModalTitle>
@@ -331,14 +425,14 @@ export default function UsersPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Role *
               </label>
-              <select {...register("roleId")}>
+              <Select {...register("roleId")} className="w-full">
                 <option value="">Select role</option>
                 {roles.map((role) => (
                   <option key={role.id} value={role.id}>
                     {role.name}
                   </option>
                 ))}
-              </select>
+              </Select>
               {errors.roleId && (
                 <p className="text-sm text-red-500 mt-1">{errors.roleId.message}</p>
               )}
@@ -362,6 +456,55 @@ export default function UsersPage() {
             </Button>
           </ModalFooter>
         </form>
+      </Modal>
+
+      <Modal
+        isOpen={!!rejectingUser}
+        onClose={() => {
+          if (!rejecting) {
+            setRejectingUser(null);
+            setRejectReason("");
+          }
+        }}
+      >
+        <ModalHeader>
+          <ModalTitle>Reject account request</ModalTitle>
+        </ModalHeader>
+        <ModalContent className="space-y-4">
+          <p className="text-sm text-gray-600">
+            Reject <span className="font-medium text-gray-900">{rejectingUser?.name}</span>
+            {rejectingUser?.email ? ` (${rejectingUser.email})` : ""}? They will be notified by email.
+          </p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Rejection reason (optional)
+            </label>
+            <textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              maxLength={500}
+              rows={4}
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600"
+              placeholder="Tell the user why their request was not approved"
+            />
+          </div>
+        </ModalContent>
+        <ModalFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              setRejectingUser(null);
+              setRejectReason("");
+            }}
+            disabled={rejecting}
+          >
+            Cancel
+          </Button>
+          <Button type="button" variant="destructive" onClick={handleReject} disabled={rejecting}>
+            {rejecting ? <Loading size="sm" /> : "Reject"}
+          </Button>
+        </ModalFooter>
       </Modal>
     </DashboardLayout>
   );

@@ -28,6 +28,7 @@ export async function listInventoryController(c: Context) {
         OR: [
           { name: { contains: search, mode: "insensitive" } },
           { sku: { contains: search, mode: "insensitive" } },
+          { barcode: { contains: search, mode: "insensitive" } },
         ],
       };
     }
@@ -48,7 +49,7 @@ export async function listInventoryController(c: Context) {
       prisma.inventoryItem.findMany({
         where,
         include: {
-          product: { select: { id: true, name: true, sku: true, unitOfMeasure: true } },
+          product: { select: { id: true, name: true, sku: true, barcode: true, unitOfMeasure: true } },
           warehouse: { select: { id: true, name: true } },
         },
         orderBy: { updatedAt: "desc" },

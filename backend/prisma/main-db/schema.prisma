@@ -94,6 +94,20 @@ enum PaymentMethod {
   JAZZCASH
   EASYPAISA
   BANK_TRANSFER
+  CARD
+  UPI
+}
+
+enum DiscountType {
+  FIXED
+  PERCENTAGE
+}
+
+enum AccountStatus {
+  PENDING_EMAIL_VERIFICATION
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
 }
 
 // ==================== USER & ROLE MANAGEMENT ====================
@@ -111,14 +125,17 @@ model Role {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  roleId    Int
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id              Int           @id @default(autoincrement())
+  name            String
+  email           String        @unique
+  password        String
+  roleId          Int
+  isActive        Boolean       @default(true)
+  emailVerified   Boolean       @default(true)
+  accountStatus   AccountStatus @default(APPROVED)
+  rejectionReason String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   role Role @relation(fields: [roleId], references: [id])
 
@@ -129,10 +146,26 @@ model User {
   returnsProcessed      ReturnOrder[]       @relation("ReturnProcessedBy")
   auditLogs             AuditLog[]          @relation("AuditLogUser")
   sessions              Session[]
+  emailOtps             EmailOtp[]
 
   @@index([email])
   @@index([roleId])
   @@index([isActive])
+  @@index([accountStatus])
+}
+
+model EmailOtp {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  codeHash   String
+  expiresAt  DateTime
+  lastSentAt DateTime
+  attempts   Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Session {
@@ -461,6 +494,9 @@ model SalesOrder {
   status        SalesOrderStatus @default(PENDING)
   notes         String?
   totalAmount   Decimal          @default(0) @db.Decimal(14, 2)
+  discountType  DiscountType?
+  discountValue Decimal          @default(0) @db.Decimal(14, 2)
+  discountAmount Decimal         @default(0) @db.Decimal(14, 2)
   paymentStatus PaymentStatus    @default(UNPAID)
   amountPaid    Decimal          @default(0) @db.Decimal(14, 2)
   paymentMethod PaymentMethod?

@@ -1,9 +1,10 @@
 import { Context } from "hono";
 import { hash } from "bcryptjs";
 import { prisma } from "../../lib/prisma";
-import { generateToken } from "../../utils/auth";
 import type { Validator } from "../../validators";
 import { idParser } from "../../helpers/idParser";
+import { issueEmailOtp } from "../../lib/emailOtp";
+import { otpEmail, sendEmail } from "../../lib/email";
 
 export async function registerController(c: Context) {
   try {
@@ -14,18 +15,32 @@ export async function registerController(c: Context) {
     });
 
     if (existingUser) {
+      if (existingUser.accountStatus === "PENDING_EMAIL_VERIFICATION" && !existingUser.emailVerified) {
+        const issued = await issueEmailOtp(existingUser.id);
+        if (!issued.ok) {
+          return c.json({
+            success: false,
+            message: `Please wait ${issued.retryAfter} seconds before requesting another code.`,
+          }, 429);
+        }
+        const mail = otpEmail(existingUser.name, issued.code!);
+        await sendEmail({ to: existingUser.email, ...mail });
+        return c.json({
+          success: true,
+          data: {
+            email: existingUser.email,
+            requiresVerification: true,
+          },
+        }, 200);
+      }
       return c.json({ success: false, message: "User with this email already exists" }, 409);
     }
 
-    let roleId = data.roleId ? idParser.decode(data.roleId) : null;
-    if (!roleId) {
-      const viewerRole = await prisma.role.findFirst({
-        where: { name: "Viewer" },
-      });
-      if (!viewerRole) {
-        return c.json({ success: false, message: "Default role not found. Please seed the database." }, 500);
-      }
-      roleId = viewerRole.id;
+    const viewerRole = await prisma.role.findFirst({
+      where: { name: "Viewer" },
+    });
+    if (!viewerRole) {
+      return c.json({ success: false, message: "Default role not found. Please seed the database." }, 500);
     }
 
     const hashedPassword = await hash(data.password, 12);
@@ -35,34 +50,26 @@ export async function registerController(c: Context) {
         name: data.name,
         email: data.email,
         password: hashedPassword,
-        roleId,
-      },
-      include: { role: true },
-    });
-
-    const { token, expiresAt } = await generateToken(user);
-
-    await prisma.session.create({
-      data: {
-        userId: user.id,
-        token,
-        expiresAt,
+        roleId: viewerRole.id,
+        isActive: false,
+        emailVerified: false,
+        accountStatus: "PENDING_EMAIL_VERIFICATION",
       },
     });
 
-    c.header("Set-Cookie", `token=${token}; HttpOnly; Secure; SameSite=Lax; Max-Age=${7 * 24 * 60 * 60}`);
+    const issued = await issueEmailOtp(user.id);
+    if (issued.ok && issued.code) {
+      const mail = otpEmail(user.name, issued.code);
+      await sendEmail({ to: user.email, ...mail });
+    }
 
     return c.json(
       {
         success: true,
         data: {
-          user: {
-            id: idParser.encode(user.id),
-            name: user.name,
-            email: user.email,
-            role: user.role.name,
-            roleId: idParser.encode(user.role.id),
-          },
+          email: user.email,
+          requiresVerification: true,
+          id: idParser.encode(user.id),
         },
       },
       201

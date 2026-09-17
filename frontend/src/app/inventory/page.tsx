@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -13,10 +14,11 @@ import type { InventoryItem } from "@/src/lib/api/inventory/types";
 import { inventoryApi, productsApi, warehousesApi } from "@/src/lib/api";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, ArrowUpDown, Edit, Plus, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowUpDown, Barcode, Edit, Plus, Search, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { BarcodeModal } from "./_components/barcode-modal";
 
 interface SimpleProduct {
   id: string;
@@ -114,6 +116,8 @@ export default function InventoryPage() {
   const [showMovementModal, setShowMovementModal] = useState(false);
   const [movementItem, setMovementItem] = useState<InventoryItem | null>(null);
   const [movementLoading, setMovementLoading] = useState(false);
+  const [showBarcodeModal, setShowBarcodeModal] = useState(false);
+  const [barcodeItem, setBarcodeItem] = useState<InventoryItem | null>(null);
 
   const addForm = useForm<InventoryFormData>({
     resolver: zodResolver(inventorySchema),
@@ -306,13 +310,37 @@ export default function InventoryPage() {
     }
   };
 
+  const handleOpenBarcode = (item: InventoryItem) => {
+    setBarcodeItem(item);
+    setShowBarcodeModal(true);
+  };
+
+  const handleCloseBarcode = () => {
+    setShowBarcodeModal(false);
+    setBarcodeItem(null);
+  };
+
+  const handleBarcodeGenerated = (productId: string, barcode: string) => {
+    setItems((current) =>
+      current.map((row) =>
+        row.product.id === productId
+          ? { ...row, product: { ...row.product, barcode } }
+          : row
+      )
+    );
+    setBarcodeItem((current) =>
+      current && current.product.id === productId
+        ? { ...current, product: { ...current.product, barcode } }
+        : current
+    );
+  };
+
   const isLowStock = (item: InventoryItem): boolean => {
     if (item.reorderPoint != null) return item.availableQuantity <= item.reorderPoint;
     if (item.minimumStockLevel > 0) return item.availableQuantity <= item.minimumStockLevel;
     return false;
   };
 
-  const selectClass = "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <DashboardLayout>
@@ -334,7 +362,7 @@ export default function InventoryPage() {
             <div className="flex flex-wrap gap-4">
               <form onSubmit={handleSearch} className="flex gap-2 flex-1">
                 <Input
-                  placeholder="Search by product name or SKU..."
+                  placeholder="Search by product name, SKU, or barcode..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="flex-1"
@@ -344,16 +372,16 @@ export default function InventoryPage() {
                   Search
                 </Button>
               </form>
-              <select
+              <Select
                 value={warehouseFilter}
                 onChange={(e) => { setWarehouseFilter(e.target.value); setPage(1); }}
-                className="w-48 flex h-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+                className="w-48"
               >
                 <option value="">All Warehouses</option>
                 {warehouses.map((wh) => (
                   <option key={wh.id} value={wh.id}>{wh.name}</option>
                 ))}
-              </select>
+              </Select>
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -386,6 +414,7 @@ export default function InventoryPage() {
                       <TableHead>Item #</TableHead>
                       <TableHead>Product</TableHead>
                       <TableHead>SKU</TableHead>
+                      <TableHead>Barcode</TableHead>
                       <TableHead>Warehouse</TableHead>
                       <TableHead className="text-right">Available</TableHead>
                       <TableHead className="text-right">Reserved</TableHead>
@@ -402,6 +431,9 @@ export default function InventoryPage() {
                         <TableCell className="font-mono text-sm text-gray-500">{item.itemNumber}</TableCell>
                         <TableCell className="font-medium">{item.product.name}</TableCell>
                         <TableCell className="text-gray-500">{item.product.sku || "-"}</TableCell>
+                        <TableCell className="font-mono text-sm text-gray-600">
+                          {item.product.barcode || "—"}
+                        </TableCell>
                         <TableCell>{item.warehouse.name}</TableCell>
                         <TableCell className="text-right font-semibold">{item.availableQuantity}</TableCell>
                         <TableCell className="text-right text-gray-500">{item.reservedQuantity}</TableCell>
@@ -422,6 +454,14 @@ export default function InventoryPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleOpenBarcode(item)}
+                              title="View barcode"
+                            >
+                              <Barcode className="h-4 w-4" />
+                            </Button>
                             <Button
                               variant="ghost"
                               size="sm"
@@ -462,6 +502,13 @@ export default function InventoryPage() {
         </Card>
       </div>
 
+      <BarcodeModal
+        item={barcodeItem}
+        isOpen={showBarcodeModal}
+        onClose={handleCloseBarcode}
+        onGenerated={handleBarcodeGenerated}
+      />
+
       {/* Add Inventory Modal */}
       <Modal isOpen={showAddModal} onClose={handleCloseAdd}>
         <ModalHeader>
@@ -471,12 +518,12 @@ export default function InventoryPage() {
           <ModalContent className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Product *</label>
-              <select {...addForm.register("productId")} className={selectClass}>
+              <Select {...addForm.register("productId")} className="w-full">
                 <option value="">Select product</option>
                 {products.map((p) => (
                   <option key={p.id} value={p.id}>{p.name} ({p.sku})</option>
                 ))}
-              </select>
+              </Select>
               {addForm.formState.errors.productId && (
                 <p className="text-sm text-red-500 mt-1">{addForm.formState.errors.productId.message}</p>
               )}
@@ -484,12 +531,12 @@ export default function InventoryPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
-              <select {...addForm.register("warehouseId")} className={selectClass}>
+              <Select {...addForm.register("warehouseId")} className="w-full">
                 <option value="">Select warehouse</option>
                 {warehouses.map((wh) => (
                   <option key={wh.id} value={wh.id}>{wh.name}</option>
                 ))}
-              </select>
+              </Select>
               {addForm.formState.errors.warehouseId && (
                 <p className="text-sm text-red-500 mt-1">{addForm.formState.errors.warehouseId.message}</p>
               )}
@@ -607,13 +654,13 @@ export default function InventoryPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Movement Type *</label>
-              <select {...movementForm.register("type")} className={selectClass}>
+              <Select {...movementForm.register("type")} className="w-full">
                 <option value="IN">Stock In</option>
                 <option value="OUT">Stock Out</option>
                 <option value="ADJUST">Adjustment</option>
                 <option value="TRANSFER">Transfer</option>
                 <option value="RETURN">Return</option>
-              </select>
+              </Select>
             </div>
 
             <div>
@@ -630,13 +677,13 @@ export default function InventoryPage() {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Reference Type *</label>
-              <select {...movementForm.register("referenceType")} className={selectClass}>
+              <Select {...movementForm.register("referenceType")} className="w-full">
                 <option value="MANUAL">Manual</option>
                 <option value="PO">Purchase Order</option>
                 <option value="ORDER">Sales Order</option>
                 <option value="TRANSFER">Transfer</option>
                 <option value="RETURN">Return</option>
-              </select>
+              </Select>
             </div>
 
             <div>

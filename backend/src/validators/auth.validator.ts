@@ -12,5 +12,14 @@ export const registerSchema = z.object({
   roleId: z.string().optional(),
 });
 
+export const verifyOtpSchema = z.object({
+  email: z.email("Invalid email address"),
+  otp: z.string().trim().min(4, "OTP is required").max(8),
+});
+
+export const resendOtpSchema = z.object({
+  email: z.email("Invalid email address"),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type RegisterInput = z.infer<typeof registerSchema>;

@@ -1,11 +1,11 @@
 import { z } from "zod";
 
-import { loginSchema, registerSchema } from "./auth.validator";
+import { loginSchema, registerSchema, verifyOtpSchema, resendOtpSchema } from "./auth.validator";
 import { paginationSchema } from "./pagination.validator";
 import { createRoleSchema, updateRoleSchema } from "./role.validator";
-import { updateUserSchema } from "./user.validator";
+import { updateUserSchema, userQuerySchema, rejectUserSchema } from "./user.validator";
 import { createCategorySchema, updateCategorySchema } from "./category.validator";
-import { createProductSchema, updateProductSchema, productQuerySchema, } from "./product.validator";
+import { createProductSchema, updateProductSchema, productQuerySchema, productBarcodeLookupSchema, } from "./product.validator";
 import { createWarehouseSchema, updateWarehouseSchema } from "./warehouse.validator";
 import { createSupplierSchema, updateSupplierSchema } from "./supplier.validator";
 import { createInventoryItemSchema, updateInventoryItemSchema, createInventoryMovementSchema, inventoryQuerySchema, movementQuerySchema, } from "./inventory.validator";
@@ -20,15 +20,20 @@ import { auditQuerySchema } from "./audit-log.validator";
 export const validator = {
   login: loginSchema,
   register: registerSchema,
+  verifyOtp: verifyOtpSchema,
+  resendOtp: resendOtpSchema,
   pagination: paginationSchema,
   createRole: createRoleSchema,
   updateRole: updateRoleSchema,
   updateUser: updateUserSchema,
+  userQuery: userQuerySchema,
+  rejectUser: rejectUserSchema,
   createCategory: createCategorySchema,
   updateCategory: updateCategorySchema,
   createProduct: createProductSchema,
   updateProduct: updateProductSchema,
   productQuery: productQuerySchema,
+  productBarcodeLookup: productBarcodeLookupSchema,
   createWarehouse: createWarehouseSchema,
   updateWarehouse: updateWarehouseSchema,
   createSupplier: createSupplierSchema,
@@ -65,15 +70,20 @@ export const validator = {
 export type Validator = {
   Login: z.infer<typeof validator.login>;
   Register: z.infer<typeof validator.register>;
+  VerifyOtp: z.infer<typeof validator.verifyOtp>;
+  ResendOtp: z.infer<typeof validator.resendOtp>;
   Pagination: z.infer<typeof validator.pagination>;
   CreateRole: z.infer<typeof validator.createRole>;
   UpdateRole: z.infer<typeof validator.updateRole>;
   UpdateUser: z.infer<typeof validator.updateUser>;
+  UserQuery: z.infer<typeof validator.userQuery>;
+  RejectUser: z.infer<typeof validator.rejectUser>;
   CreateCategory: z.infer<typeof validator.createCategory>;
   UpdateCategory: z.infer<typeof validator.updateCategory>;
   CreateProduct: z.infer<typeof validator.createProduct>;
   UpdateProduct: z.infer<typeof validator.updateProduct>;
   ProductQuery: z.infer<typeof validator.productQuery>;
+  ProductBarcodeLookup: z.infer<typeof validator.productBarcodeLookup>;
   CreateWarehouse: z.infer<typeof validator.createWarehouse>;
   UpdateWarehouse: z.infer<typeof validator.updateWarehouse>;
   CreateSupplier: z.infer<typeof validator.createSupplier>;

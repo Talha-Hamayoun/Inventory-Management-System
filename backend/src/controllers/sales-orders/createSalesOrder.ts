@@ -4,10 +4,11 @@ import { createAuditLog } from "../../utils/audit";
 import { getAuthUser } from "../../utils/auth";
 import type { Validator } from "../../validators";
 import { idParser } from "../../helpers/idParser";
+import { resolveDiscount } from "../../lib/salesOrderDiscount";
 
 export async function createSalesOrderController(c: Context) {
   try {
-    const data = await c.req.json() as Validator["CreateSalesOrder"];
+    const data = (c.req as any).valid("json") as Validator["CreateSalesOrder"];
     const user = getAuthUser(c)!;
 
     const customerId = idParser.decode(data.customerId);
@@ -71,10 +72,33 @@ export async function createSalesOrderController(c: Context) {
       });
     }
 
-    const totalAmount = data.items.reduce(
+    const subtotal = data.items.reduce(
       (sum, item) => sum + item.quantity * item.unitPrice,
       0
     );
+    const discountType = data.discountValue ? data.discountType ?? "FIXED" : data.discountType;
+    const discount = resolveDiscount(subtotal, discountType, data.discountValue ?? 0);
+    if (discount.error) {
+      return c.json({ success: false, message: discount.error }, 400);
+    }
+    const totalAmount = discount.invoiceTotal;
+
+    const amountPaid = data.amountPaid ?? 0;
+    if (amountPaid > totalAmount) {
+      return c.json({
+        success: false,
+        message: `Amount paid (${amountPaid}) cannot exceed order total (${totalAmount})`,
+      }, 400);
+    }
+
+    let paymentStatus: "UNPAID" | "PARTIAL" | "PAID" = "UNPAID";
+    if (amountPaid <= 0) {
+      paymentStatus = "UNPAID";
+    } else if (amountPaid >= totalAmount) {
+      paymentStatus = "PAID";
+    } else {
+      paymentStatus = "PARTIAL";
+    }
 
     const created = await prisma.salesOrder.create({
       data: {
@@ -83,6 +107,12 @@ export async function createSalesOrderController(c: Context) {
         warehouseId,
         notes: data.notes,
         totalAmount,
+        discountType: discount.discountAmount > 0 ? (discountType ?? "FIXED") : null,
+        discountValue: discount.discountAmount > 0 ? (data.discountValue ?? 0) : 0,
+        discountAmount: discount.discountAmount,
+        amountPaid,
+        paymentStatus,
+        paymentMethod: data.paymentMethod ?? null,
         createdBy: user.id,
         items: { create: itemsWithCost },
       },

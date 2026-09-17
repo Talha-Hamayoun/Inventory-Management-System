@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/lib/auth-context";
 import { PageLoading } from "@/src/components/ui/loading";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/src/components/ui/button";
 import { Package, ArrowRight } from "lucide-react";
 
@@ -26,9 +27,15 @@ export default function Home() {
     <main className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
         <nav className="flex justify-between items-center mb-16">
-          <div className="flex items-center gap-2">
-            <Package className="h-8 w-8 text-blue-600" />
-            <span className="text-xl font-bold text-gray-900">Inventory System</span>
+          <div className="flex items-center">
+            <Image
+              src="/Logo2.png"
+              alt="AutoLine"
+              width={280}
+              height={56}
+              className="h-14 w-auto object-contain"
+              priority
+            />
           </div>
           <div className="flex gap-4">
             <Link href="/login" className="cursor-pointer">
@@ -41,10 +48,8 @@ export default function Home() {
         </nav>
 
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Inventory Management
-            <br />
-            <span className="text-blue-600">Made Simple</span>
+          <h1 className="text-5xl font-bold text-gray-900 mb-8">
+            AutoLine Inventory Management
           </h1>
           <p className="text-xl text-gray-600 mb-8">
             Track products, manage warehouses, handle purchase orders, and monitor

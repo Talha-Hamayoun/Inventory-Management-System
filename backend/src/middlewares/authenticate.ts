@@ -4,6 +4,7 @@ import { JsonValue } from "@prisma/client/runtime/client";
 import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
 import { verifyToken } from "../utils/auth";
+import { getLoginBlockMessage } from "../lib/accountAccess";
 
 declare module "hono" {
   interface ContextVariableMap {
@@ -16,6 +17,9 @@ declare module "hono" {
       password: string;
       roleId: number;
       isActive: boolean;
+      emailVerified: boolean;
+      accountStatus: string;
+      rejectionReason: string | null;
       role: {
         name: string;
         id: number;
@@ -49,8 +53,13 @@ export async function authenticate(c: Context, next: Next) {
     include: { role: true },
   })
 
-  if (!user || !user.isActive) {
+  if (!user) {
     return c.json({ success: false, message: "Unauthorized: User not found or inactive" }, 401);
+  }
+
+  const blockMessage = getLoginBlockMessage(user);
+  if (blockMessage) {
+    return c.json({ success: false, message: blockMessage }, 403);
   }
 
   c.set("user", user);

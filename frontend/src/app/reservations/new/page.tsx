@@ -2,6 +2,7 @@
 
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -12,8 +13,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const selectClass =
-  "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent disabled:cursor-not-allowed disabled:opacity-50";
 
 interface SimpleProduct { id: string; name: string; sku: string | null }
 interface SimpleWarehouse { id: string; name: string }
@@ -236,13 +235,13 @@ export default function NewReservationPage() {
                 <div className="flex flex-wrap gap-4 items-end">
                   <div className="flex-1 min-w-48">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Product</label>
-                    <select
+                    <Select
                       value={panel.productId}
                       onChange={(e) => {
                         setPanel({ ...panel, productId: e.target.value });
                         setDuplicateMsg("");
                       }}
-                      className={selectClass}
+                      className="w-full"
                       disabled={isEditing}
                     >
                       <option value="">Select product</option>
@@ -251,17 +250,17 @@ export default function NewReservationPage() {
                           {p.name}{p.sku ? ` | ${p.sku}` : ""}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   <div className="flex-1 min-w-48">
                     <label className="block text-xs font-medium text-gray-600 mb-1">Warehouse</label>
-                    <select
+                    <Select
                       value={panel.warehouseId}
                       onChange={(e) => {
                         setPanel({ ...panel, warehouseId: e.target.value });
                         setDuplicateMsg("");
                       }}
-                      className={selectClass}
+                      className="w-full"
                       disabled={isEditing}
                     >
                       <option value="">Select warehouse</option>
@@ -270,7 +269,7 @@ export default function NewReservationPage() {
                           {w.name}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Quantity</label>

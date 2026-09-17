@@ -43,6 +43,17 @@ export async function createProductController(c: Context) {
       }, 400);
     }
 
+    const barcode = data.barcode?.trim() || undefined;
+
+    if (barcode) {
+      const duplicateBarcode = await prisma.product.findFirst({
+        where: { barcode },
+      });
+      if (duplicateBarcode) {
+        return c.json({ success: false, message: "Barcode already exists" }, 400);
+      }
+    }
+
     const product = await prisma.product.create({
       data: {
         name: data.name,
@@ -51,7 +62,7 @@ export async function createProductController(c: Context) {
         categoryId,
         status: data.status,
         unitOfMeasure: data.unitOfMeasure,
-        barcode: data.barcode,
+        barcode,
         costPrice: data.costPrice,
         sellingPrice: data.sellingPrice,
       },

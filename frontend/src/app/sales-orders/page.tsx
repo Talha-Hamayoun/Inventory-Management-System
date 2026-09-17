@@ -3,6 +3,7 @@
 import { DashboardLayout } from "@/src/components/dashboard-layout";
 import { Badge } from "@/src/components/ui/badge";
 import { Button } from "@/src/components/ui/button";
+import { Select } from "@/src/components/ui/select";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
@@ -117,17 +118,17 @@ export default function SalesOrdersPage() {
                   placeholder="Search by order number or customer..."
                 />
               </div>
-              <select
+              <Select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value as SalesOrderStatus | ""); setPage(1); }}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm"
+                className="w-44"
               >
                 <option value="">All Statuses</option>
                 <option value="PENDING">Pending</option>
                 <option value="CONFIRMED">Confirmed</option>
                 <option value="FULFILLED">Fulfilled</option>
                 <option value="CANCELLED">Cancelled</option>
-              </select>
+              </Select>
               <Button type="submit" variant="outline" className="gap-2">
                 <Search className="h-4 w-4" />
                 Search

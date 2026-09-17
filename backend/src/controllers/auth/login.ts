@@ -5,11 +5,10 @@ import { generateToken } from "../../utils/auth";
 import type { Validator } from "../../validators";
 import { idParser } from "../../helpers/idParser";
 import { setCookie } from "hono/cookie";
+import { getLoginBlockMessage } from "../../lib/accountAccess";
 
 export async function loginController(c: Context) {
-
     try {
-
         const { email, password } = await c.req.json() as Validator["Login"];
 
         const user = await prisma.user.findUnique({
@@ -21,13 +20,14 @@ export async function loginController(c: Context) {
             return c.json({ success: false, message: "Invalid credentials" }, 401);
         }
 
-        if (!user.isActive) {
-            return c.json({ success: false, message: "Account is deactivated" }, 403);
-        }
-
         const isValidPassword = await compare(password, user.password);
         if (!isValidPassword) {
             return c.json({ success: false, message: "Invalid credentials" }, 401);
+        }
+
+        const blockMessage = getLoginBlockMessage(user);
+        if (blockMessage) {
+            return c.json({ success: false, message: blockMessage }, 403);
         }
 
         const { token, expiresAt } = await generateToken(user);
