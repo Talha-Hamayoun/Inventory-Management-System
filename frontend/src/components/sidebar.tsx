@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/src/lib/utils";
 import { useAuth } from "@/src/lib/auth-context";
@@ -84,18 +85,21 @@ export function Sidebar({
       >
         <div className="flex flex-col h-full">
           <div className="px-4 pt-5 pb-4">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <Package className="h-5 w-5 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-base font-semibold tracking-tight">Inventory</p>
-                <p className="text-[11px] text-white/45 truncate">Management System</p>
-              </div>
+            <div className="flex items-center justify-between">
+              <Link href="/dashboard" className="min-w-0 flex-1">
+                <Image
+                  src="/Logo1.png"
+                  alt="AutoLine"
+                  width={280}
+                  height={56}
+                  className="h-14 max-w-full object-contain"
+                  priority
+                />
+              </Link>
               <button
                 type="button"
                 onClick={() => onOpenChange(false)}
-                className="lg:hidden h-8 w-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 cursor-pointer"
+                className="lg:hidden h-8 w-8 shrink-0 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 cursor-pointer"
                 aria-label="Close menu"
               >
                 <X className="h-4 w-4" />

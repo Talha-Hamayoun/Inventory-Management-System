@@ -11,7 +11,8 @@ import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/src/components/ui/card";
 import { LayoutBackground } from "@/src/components/layout-background";
-import { Package, Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
 
 const loginSchema = z.object({
   email: z.email("Please enter a valid email"),
@@ -63,9 +64,14 @@ export default function LoginPage() {
       <Card className="relative z-10 w-full max-w-md bg-white/95 dark:bg-slate-900/90 backdrop-blur-sm shadow-xl">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-12 w-12 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Package className="h-6 w-6 text-white" />
-            </div>
+            <Image
+              src="/Logo2.png"
+              alt="AutoLine"
+              width={280}
+              height={56}
+              className="h-14 w-auto max-w-60 object-contain"
+              priority
+            />
           </div>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your account to continue</CardDescription>
