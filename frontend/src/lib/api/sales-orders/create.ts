@@ -1,4 +1,4 @@
-import type { SalesOrderDetailResponse } from "./types";
+import type { DiscountType, PaymentMethod, SalesOrderDetailResponse } from "./types";
 import apiClient from "../client";
 
 export interface CreateSalesOrderRequest {
@@ -6,6 +6,10 @@ export interface CreateSalesOrderRequest {
   warehouseId: string;
   notes?: string;
   items: { productId: string; quantity: number; unitPrice: number }[];
+  paymentMethod?: PaymentMethod;
+  amountPaid?: number;
+  discountType?: DiscountType;
+  discountValue?: number;
 }
 
 export async function createSalesOrder(data: CreateSalesOrderRequest) {

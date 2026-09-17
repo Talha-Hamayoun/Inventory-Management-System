@@ -17,7 +17,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (email: string, password: string) => Promise<{ success: true } | { success: false; message: string }>;
   logout: () => Promise<void>;
   hasPermission: (permission: string) => boolean;
   hasAnyPermission: (permissions: string[]) => boolean;
@@ -73,26 +73,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authApi.login({ email, password });
 
-      if (!response.data || response.error) {
-        setUser(null);
-        localStorage.removeItem('auth');
-        return false;
-      }
-
-      // Check if response was successful
-      if (response.data.success && response.data.data) {
+      if (response.data && "success" in response.data && response.data.success && response.data.data) {
         setUser(response.data.data.user);
-        // Store auth data in localStorage
-        localStorage.setItem('auth', JSON.stringify(response.data.data));
-        return true;
+        localStorage.setItem("auth", JSON.stringify(response.data.data));
+        return { success: true as const };
       }
 
       setUser(null);
-      localStorage.removeItem('auth');
-      return false;
+      localStorage.removeItem("auth");
+      const message =
+        (response.data && "message" in response.data && response.data.message) ||
+        (response.error instanceof Error ? response.error.message : "Login failed. Please try again.");
+      return { success: false as const, message };
     } catch {
-      localStorage.removeItem('auth');
-      return false;
+      localStorage.removeItem("auth");
+      return { success: false as const, message: "Login failed. Please try again." };
     }
   };
 

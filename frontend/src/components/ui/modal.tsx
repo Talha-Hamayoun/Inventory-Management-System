@@ -62,7 +62,14 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
             </Button>
           </div>
         )}
-        <div className="p-4 overflow-y-auto flex-1">{children}</div>
+        <div
+          className={cn(
+            "min-h-0 flex-1",
+            title ? "overflow-y-auto p-4" : "flex flex-col overflow-hidden"
+          )}
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -71,7 +78,7 @@ export function Modal({ isOpen, onClose, title, children, size = "md" }: ModalPr
 // Additional modal components for flexibility
 export function ModalHeader({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex items-center justify-between p-4 border-b", className)}>
+    <div className={cn("flex shrink-0 items-center justify-between p-4 border-b", className)}>
       {children}
     </div>
   );
@@ -95,7 +102,7 @@ export function ModalContent({ children, className }: { children: React.ReactNod
 
 export function ModalFooter({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn("flex items-center justify-end gap-2 p-4 border-t", className)}>
+    <div className={cn("flex shrink-0 items-center justify-end gap-2 p-4 border-t", className)}>
       {children}
     </div>
   );

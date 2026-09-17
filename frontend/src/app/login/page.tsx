@@ -30,22 +30,24 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
+  const emailValue = watch("email");
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
     setError("");
 
     try {
-      const success = await login(data.email, data.password);
+      const result = await login(data.email, data.password);
 
-      if (success) {
+      if (result.success) {
         router.push("/dashboard");
       } else {
-        setError("Login failed. Please try again.");
+        setError(result.message || "Login failed. Please try again.");
       }
     } catch (err: unknown) {
       const error = err as { response?: { data?: { error?: string } } };
@@ -71,8 +73,16 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">
-                {error}
+              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm space-y-2">
+                <p>{error}</p>
+                {error.toLowerCase().includes("verify your email") && (
+                  <Link
+                    href={`/verify-email?email=${encodeURIComponent(emailValue || "")}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Verify email
+                  </Link>
+                )}
               </div>
             )}
             <div>

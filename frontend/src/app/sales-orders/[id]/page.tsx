@@ -148,6 +148,8 @@ export default function SalesOrderDetailPage() {
   const totalAmount = Number(order.totalAmount);
   const amountPaid = Number(order.amountPaid);
   const balanceDue = totalAmount - amountPaid;
+  const itemsSubtotal = order.items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+  const discountAmount = Number(order.discountAmount ?? 0);
 
   return (
     <DashboardLayout>
@@ -287,7 +289,7 @@ export default function SalesOrderDetailPage() {
             </div>
             <div className="grid grid-cols-3 gap-6 text-sm">
               <div>
-                <p className="text-gray-500 mb-1">Total Amount</p>
+                <p className="text-gray-500 mb-1">Invoice Total</p>
                 <p className="text-lg font-semibold text-gray-900">Rs. {totalAmount.toLocaleString()}</p>
               </div>
               <div>
@@ -336,9 +338,24 @@ export default function SalesOrderDetailPage() {
               </TableBody>
             </Table>
             <div className="border-t mt-4 pt-4 flex justify-end">
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Total Amount</p>
-                <p className="text-2xl font-bold text-gray-900">Rs. {totalAmount.toLocaleString()}</p>
+              <div className="w-64 space-y-1 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Subtotal</span>
+                  <span className="font-medium">Rs. {itemsSubtotal.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Discount / Savings</span>
+                  <span className="font-medium text-green-700">
+                    Rs. {discountAmount.toLocaleString()}
+                    {order.discountType === "PERCENTAGE" && Number(order.discountValue) > 0
+                      ? ` (${Number(order.discountValue)}%)`
+                      : ""}
+                  </span>
+                </div>
+                <div className="flex justify-between pt-2">
+                  <span className="text-gray-700 font-semibold">Invoice Total</span>
+                  <span className="text-2xl font-bold text-gray-900">Rs. {totalAmount.toLocaleString()}</span>
+                </div>
               </div>
             </div>
           </CardContent>

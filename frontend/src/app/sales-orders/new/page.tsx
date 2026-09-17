@@ -6,28 +6,34 @@ import { Select } from "@/src/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/src/components/ui/card";
 import { Input } from "@/src/components/ui/input";
 import { Loading } from "@/src/components/ui/loading";
-import { salesOrdersApi, customersApi, warehousesApi, productsApi } from "@/src/lib/api";
+import { salesOrdersApi, customersApi, warehousesApi, productsApi, inventoryApi } from "@/src/lib/api";
+import type { PaymentMethod } from "@/src/lib/api/sales-orders/types";
+import { resolveDiscount, type DiscountType } from "@/src/lib/sales-order-discount";
 import { toast } from "sonner";
 import { ArrowLeft, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { BarcodeScanInput } from "./_components/barcode-scan-input";
+import { OrderSummary } from "./_components/order-summary";
 
 interface OrderItem {
   productId: string;
   productName: string;
   quantity: number;
   unitPrice: number;
+  availableQuantity: number;
 }
 
 interface CustomerOption { id: string; name: string; phone: string; }
 interface WarehouseOption { id: string; name: string; }
 interface ProductOption { id: string; name: string; sku: string | undefined; costPrice: number | null; sellingPrice: number | null; }
 
-
 export default function NewSalesOrderPage() {
   const router = useRouter();
+  const barcodeRef = useRef<HTMLInputElement>(null);
   const [saving, setSaving] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
   const [customers, setCustomers] = useState<CustomerOption[]>([]);
   const [warehouses, setWarehouses] = useState<WarehouseOption[]>([]);
@@ -37,6 +43,11 @@ export default function NewSalesOrderPage() {
   const [warehouseId, setWarehouseId] = useState("");
   const [notes, setNotes] = useState("");
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [barcode, setBarcode] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | "">("");
+  const [cashReceived, setCashReceived] = useState("");
+  const [discountType, setDiscountType] = useState<DiscountType>("FIXED");
+  const [discountValue, setDiscountValue] = useState("0");
 
   const [panelItem, setPanelItem] = useState({ productId: "", quantity: 1, unitPrice: 0 });
   const [editIndex, setEditIndex] = useState<number | null>(null);
@@ -66,39 +77,162 @@ export default function NewSalesOrderPage() {
       ? `Cannot be less than cost price (Rs. ${panelProduct.costPrice.toLocaleString()})`
       : null;
 
+  const rememberProduct = (product: ProductOption) => {
+    setProducts((current) => (current.some((item) => item.id === product.id) ? current : [...current, product]));
+  };
+
+  const addProductToCart = (
+    product: ProductOption & { availableQuantity: number },
+    quantity: number,
+    unitPrice: number,
+    source: "barcode" | "manual"
+  ) => {
+    if (product.costPrice != null && unitPrice < product.costPrice) {
+      toast.error(`Unit price for "${product.name}" cannot be less than cost price`);
+      return false;
+    }
+    if (product.availableQuantity <= 0) {
+      toast.error("Product is out of stock");
+      return false;
+    }
+
+    let nextQty = quantity;
+    let updatedExisting = false;
+    let exceeded = false;
+
+    setItems((current) => {
+      const existing = current.find((item) => item.productId === product.id);
+      nextQty = (existing?.quantity ?? 0) + quantity;
+      if (nextQty > product.availableQuantity) {
+        exceeded = true;
+        return current;
+      }
+      if (existing) {
+        updatedExisting = true;
+        return current.map((item) =>
+          item.productId === product.id
+            ? { ...item, quantity: nextQty, unitPrice, availableQuantity: product.availableQuantity }
+            : item
+        );
+      }
+      return [
+        ...current,
+        {
+          productId: product.id,
+          productName: product.name,
+          quantity: nextQty,
+          unitPrice,
+          availableQuantity: product.availableQuantity,
+        },
+      ];
+    });
+
+    if (exceeded) {
+      toast.error(`Only ${product.availableQuantity} units available`);
+      return false;
+    }
+    rememberProduct(product);
+    if (updatedExisting) {
+      if (source === "barcode") toast.success(`Quantity updated to ${nextQty}`);
+      else setDuplicateMsg("Product already in list — quantity updated.");
+    } else if (source === "barcode") {
+      toast.success(`${product.name} added`);
+    } else {
+      setDuplicateMsg("");
+    }
+    return true;
+  };
+
+  const focusBarcode = () => {
+    requestAnimationFrame(() => barcodeRef.current?.focus());
+  };
+
+  const handleWarehouseChange = (nextWarehouseId: string) => {
+    setWarehouseId(nextWarehouseId);
+    if (nextWarehouseId) focusBarcode();
+  };
+
+  const handleBarcodeSubmit = async () => {
+    const code = barcode.trim();
+    if (!code || scanning) return;
+    if (!warehouseId) {
+      toast.error("Please select a warehouse first");
+      return;
+    }
+
+    setScanning(true);
+    try {
+      const response = await productsApi.lookupByBarcode(code, warehouseId);
+      if (!response.data || response.data.success === false) {
+        toast.error(
+          response.data && "message" in response.data ? response.data.message : "Barcode not found"
+        );
+        setBarcode("");
+        focusBarcode();
+        return;
+      }
+
+      const product = response.data.data;
+      addProductToCart(
+        {
+          id: product.id,
+          name: product.name,
+          sku: product.sku ?? undefined,
+          costPrice: product.costPrice,
+          sellingPrice: product.sellingPrice,
+          availableQuantity: product.availableQuantity,
+        },
+        1,
+        product.sellingPrice ?? 0,
+        "barcode"
+      );
+      setBarcode("");
+      focusBarcode();
+    } finally {
+      setScanning(false);
+      focusBarcode();
+    }
+  };
+
   const handlePanelProductChange = (productId: string) => {
     const product = products.find((p) => p.id === productId);
     setPanelItem({ ...panelItem, productId, unitPrice: product?.sellingPrice ?? 0 });
     setDuplicateMsg("");
   };
 
-  const handleAddToOrder = () => {
+  const handleAddToOrder = async () => {
     if (!panelItem.productId || panelPriceError) return;
-    const product = products.find((p) => p.id === panelItem.productId);
-    const existingIdx = items.findIndex((i) => i.productId === panelItem.productId);
-    if (existingIdx !== -1) {
-      const updated = [...items];
-      updated[existingIdx] = {
-        ...updated[existingIdx],
-        quantity: updated[existingIdx].quantity + panelItem.quantity,
-        unitPrice: panelItem.unitPrice,
-      };
-      setItems(updated);
-      setDuplicateMsg("Product already in list — quantity updated.");
-    } else {
-      setItems([...items, {
-        productId: panelItem.productId,
-        productName: product?.name || "",
-        quantity: panelItem.quantity,
-        unitPrice: panelItem.unitPrice,
-      }]);
-      setDuplicateMsg("");
+    if (!warehouseId) {
+      toast.error("Please select a warehouse first");
+      return;
     }
-    setPanelItem({ productId: "", quantity: 1, unitPrice: 0 });
+    const product = products.find((p) => p.id === panelItem.productId);
+    if (!product) return;
+
+    const stock = await inventoryApi.list({
+      productId: panelItem.productId,
+      warehouseId,
+      limit: 1,
+    });
+    const availableQuantity =
+      stock.data && stock.data.success ? stock.data.data[0]?.availableQuantity ?? 0 : 0;
+
+    const added = addProductToCart(
+      { ...product, availableQuantity },
+      panelItem.quantity,
+      panelItem.unitPrice,
+      "manual"
+    );
+    if (added) setPanelItem({ productId: "", quantity: 1, unitPrice: 0 });
   };
 
   const handleUpdateItem = () => {
     if (editIndex === null || panelPriceError) return;
+    const current = items[editIndex];
+    if (panelItem.quantity > current.availableQuantity) {
+      toast.error(`Only ${current.availableQuantity} units available`);
+      return;
+    }
     const product = products.find((p) => p.id === panelItem.productId);
     const updated = [...items];
     updated[editIndex] = {
@@ -106,6 +240,7 @@ export default function NewSalesOrderPage() {
       productName: product?.name || "",
       quantity: panelItem.quantity,
       unitPrice: panelItem.unitPrice,
+      availableQuantity: current.availableQuantity,
     };
     setItems(updated);
     setEditIndex(null);
@@ -131,17 +266,34 @@ export default function NewSalesOrderPage() {
     if (editIndex === index) handleCancelEdit();
   };
 
-  const totalAmount = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+  const discount = resolveDiscount(subtotal, discountType, Number(discountValue));
+  const invoiceTotal = discount.invoiceTotal;
+  const cashValue = Number(cashReceived);
+  const cashShort =
+    paymentMethod === "CASH" && (!Number.isFinite(cashValue) || cashValue < invoiceTotal);
+  const canCreate =
+    items.length > 0 && Boolean(paymentMethod) && !cashShort && !saving && !discount.error;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerId) { toast.error("Please select a customer"); return; }
     if (!warehouseId) { toast.error("Please select a warehouse"); return; }
     if (items.length === 0) { toast.error("Please add at least one item"); return; }
+    if (!paymentMethod) { toast.error("Please select a payment method"); return; }
+    if (discount.error) { toast.error(discount.error); return; }
+    if (cashShort) {
+      toast.error("Cash received must be at least the invoice total");
+      return;
+    }
     for (const item of items) {
       const product = products.find((p) => p.id === item.productId);
       if (product?.costPrice != null && item.unitPrice < product.costPrice) {
         toast.error(`Unit price for "${item.productName}" cannot be less than cost price`);
+        return;
+      }
+      if (item.quantity > item.availableQuantity) {
+        toast.error(`Only ${item.availableQuantity} units available`);
         return;
       }
     }
@@ -157,6 +309,10 @@ export default function NewSalesOrderPage() {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
         })),
+        paymentMethod,
+        amountPaid: invoiceTotal,
+        discountType: discount.discountAmount > 0 ? discountType : undefined,
+        discountValue: discount.discountAmount > 0 ? Number(discountValue) : 0,
       });
       if (response.data?.success) {
         toast.success("Sales order created");
@@ -171,7 +327,7 @@ export default function NewSalesOrderPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-4xl mx-auto">
+      <div className="space-y-6 max-w-5xl mx-auto">
         <div className="flex items-center gap-4">
           <Link href="/sales-orders">
             <Button variant="outline" size="sm" className="gap-2">
@@ -184,7 +340,17 @@ export default function NewSalesOrderPage() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter") return;
+            const target = e.target as HTMLElement;
+            if (target.tagName === "INPUT" && target.id !== "sales-order-barcode") {
+              e.preventDefault();
+            }
+          }}
+          className="space-y-6"
+        >
           <Card>
             <CardHeader><CardTitle>Order Details</CardTitle></CardHeader>
             <CardContent className="space-y-4">
@@ -198,7 +364,7 @@ export default function NewSalesOrderPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Warehouse *</label>
-                  <Select value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)} className="w-full" required>
+                  <Select value={warehouseId} onChange={(e) => handleWarehouseChange(e.target.value)} className="w-full" required>
                     <option value="">Select warehouse...</option>
                     {warehouses.map((w) => <option key={w.id} value={w.id}>{w.name}</option>)}
                   </Select>
@@ -214,7 +380,18 @@ export default function NewSalesOrderPage() {
           <Card>
             <CardHeader><CardTitle>Order Items</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              {/* Add / Edit Panel */}
+              <BarcodeScanInput
+                ref={barcodeRef}
+                value={barcode}
+                onChange={setBarcode}
+                onSubmit={() => void handleBarcodeSubmit()}
+                disabled={!warehouseId}
+                loading={scanning}
+              />
+              {!warehouseId && (
+                <p className="text-xs text-amber-600">Select a warehouse first to scan or enter barcodes.</p>
+              )}
+
               <div className="p-4 border rounded-lg bg-gray-50">
                 <p className="text-sm font-medium text-gray-700 mb-3">
                   {editIndex !== null ? "Edit Item" : "Add Item"}
@@ -254,7 +431,7 @@ export default function NewSalesOrderPage() {
                   </div>
                   <div className="flex gap-2">
                     {editIndex === null ? (
-                      <Button type="button" onClick={handleAddToOrder} disabled={!panelItem.productId || !!panelPriceError}>
+                      <Button type="button" onClick={() => void handleAddToOrder()} disabled={!panelItem.productId || !!panelPriceError}>
                         Add to Order
                       </Button>
                     ) : (
@@ -274,7 +451,6 @@ export default function NewSalesOrderPage() {
                 {duplicateMsg && <p className="text-xs text-green-600 mt-2">{duplicateMsg}</p>}
               </div>
 
-              {/* Items Table */}
               {items.length > 0 && (
                 <div>
                   <p className="text-sm font-semibold text-gray-700 mb-2">Items Added ({items.length})</p>
@@ -293,7 +469,7 @@ export default function NewSalesOrderPage() {
                       {items.map((item, idx) => {
                         const sku = products.find((p) => p.id === item.productId)?.sku;
                         return (
-                          <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                          <tr key={item.productId} className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}>
                             <td className="px-3 py-2 text-gray-500">{idx + 1}</td>
                             <td className="px-3 py-2 font-medium">
                               {item.productName}
@@ -319,21 +495,24 @@ export default function NewSalesOrderPage() {
                   </table>
                 </div>
               )}
-
-              {items.length > 0 && (
-                <div className="flex justify-end pt-4 border-t">
-                  <div className="text-right">
-                    <p className="text-sm text-gray-500">Total Amount</p>
-                    <p className="text-2xl font-bold text-gray-900">Rs. {totalAmount.toLocaleString()}</p>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
+          <OrderSummary
+            subtotal={subtotal}
+            discountType={discountType}
+            discountValue={discountValue}
+            onDiscountTypeChange={setDiscountType}
+            onDiscountValueChange={setDiscountValue}
+            paymentMethod={paymentMethod}
+            onPaymentMethodChange={setPaymentMethod}
+            cashReceived={cashReceived}
+            onCashReceivedChange={setCashReceived}
+          />
+
           <div className="flex justify-end gap-3">
             <Link href="/sales-orders"><Button type="button" variant="outline">Cancel</Button></Link>
-            <Button type="submit" disabled={saving || items.length === 0}>
+            <Button type="submit" disabled={!canCreate}>
               {saving ? <Loading size="sm" /> : "Create Order"}
             </Button>
           </div>

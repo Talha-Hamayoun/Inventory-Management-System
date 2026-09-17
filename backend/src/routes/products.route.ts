@@ -9,15 +9,23 @@ import { createProductController } from "../controllers/products/createProduct";
 import { updateProductController } from "../controllers/products/updateProduct";
 import { deleteProductController } from "../controllers/products/deleteProduct";
 import { bulkDeleteProductsController } from "../controllers/products/bulkDeleteProducts";
+import { generateProductBarcodeController } from "../controllers/products/generateProductBarcode";
+import { lookupProductByBarcodeController } from "../controllers/products/lookupProductByBarcode";
 
 const productsRoutes = new Hono();
 
 productsRoutes.use("*", authenticate);
 
+productsRoutes.get("/", apiValidator("query", validator.productQuery), listProductsController);
 productsRoutes.get(
-  "/",
-  apiValidator("query", validator.productQuery),
-  listProductsController,
+  "/lookup",
+  apiValidator("query", validator.productBarcodeLookup),
+  lookupProductByBarcodeController,
+);
+productsRoutes.post(
+  "/:id/barcode",
+  authorize(["products:update"]),
+  generateProductBarcodeController,
 );
 productsRoutes.get("/:id", getProductController);
 productsRoutes.post(

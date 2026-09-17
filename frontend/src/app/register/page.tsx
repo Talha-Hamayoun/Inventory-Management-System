@@ -49,30 +49,23 @@ export default function RegisterPage() {
         password: data.password,
       });
 
-      // Check if response has data
-      if (response.data) {
-        // Type narrowing using 'success' property
-        if (response.data.success === true) {
-          // Success case - response.data is { success: true } & { data: RegisterResponseData }
-          router.push("/dashboard");
-        } else if (response.data.success === false) {
-          // Error case - response.data is { success: false; message: string; ... }
-          setError(response.data.message || "Registration failed. Please try again.");
-        } else {
-          setError("Registration failed. Please try again.");
-        }
-      } else if (response.error) {
-        // Handle error case
-        if (response.error instanceof Error) {
-          setError(response.error.message);
-        } else {
-          setError("Registration failed. Please try again.");
-        }
-      } else {
-        setError("Unexpected response from server.");
+      if (response.data && response.data.success === true) {
+        router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+        return;
       }
+
+      if (response.data && response.data.success === false) {
+        setError(response.data.message || "Registration failed. Please try again.");
+        return;
+      }
+
+      if (response.error instanceof Error) {
+        setError(response.error.message);
+        return;
+      }
+
+      setError("Registration failed. Please try again.");
     } catch (err: unknown) {
-      // Handle different error types
       if (err instanceof Error) {
         setError(err.message);
       } else {

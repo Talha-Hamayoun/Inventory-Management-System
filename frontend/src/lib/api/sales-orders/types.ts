@@ -1,6 +1,7 @@
 export type SalesOrderStatus = "PENDING" | "CONFIRMED" | "FULFILLED" | "CANCELLED";
 export type PaymentStatus = "UNPAID" | "PARTIAL" | "PAID";
-export type PaymentMethod = "CASH" | "COD" | "JAZZCASH" | "EASYPAISA" | "BANK_TRANSFER";
+export type PaymentMethod = "CASH" | "COD" | "JAZZCASH" | "EASYPAISA" | "BANK_TRANSFER" | "CARD" | "UPI";
+export type DiscountType = "FIXED" | "PERCENTAGE";
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   CASH: "Cash",
@@ -8,7 +9,15 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   JAZZCASH: "JazzCash",
   EASYPAISA: "Easypaisa",
   BANK_TRANSFER: "Online Bank Transfer",
+  CARD: "Card",
+  UPI: "UPI / Digital Payment",
 };
+
+export const POS_PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
+  { value: "CASH", label: "Cash" },
+  { value: "CARD", label: "Card" },
+  { value: "UPI", label: "UPI / Digital Payment" },
+];
 
 export interface SalesOrderItem {
   id: string;
@@ -28,6 +37,9 @@ export interface SalesOrder {
   status: SalesOrderStatus;
   notes: string | null;
   totalAmount: string;
+  discountType?: DiscountType | null;
+  discountValue?: string;
+  discountAmount?: string;
   paymentStatus: PaymentStatus;
   amountPaid: string;
   paymentMethod: PaymentMethod | null;

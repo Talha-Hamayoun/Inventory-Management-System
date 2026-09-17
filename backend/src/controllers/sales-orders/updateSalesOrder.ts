@@ -4,6 +4,7 @@ import { createAuditLog } from "../../utils/audit";
 import { getAuthUser } from "../../utils/auth";
 import type { Validator } from "../../validators";
 import { idParser } from "../../helpers/idParser";
+import { resolveDiscount, type DiscountType } from "../../lib/salesOrderDiscount";
 
 export async function updateSalesOrderController(c: Context) {
   try {
@@ -39,6 +40,11 @@ export async function updateSalesOrderController(c: Context) {
 
     if (data.notes !== undefined) updateData.notes = data.notes;
 
+    const nextDiscountType =
+      data.discountType !== undefined ? data.discountType : existing.discountType as DiscountType | null;
+    const nextDiscountValue =
+      data.discountValue !== undefined ? data.discountValue : Number(existing.discountValue);
+
     if (data.items) {
       const itemsWithCost: {
         productId: number;
@@ -62,12 +68,30 @@ export async function updateSalesOrderController(c: Context) {
         });
       }
 
-      const totalAmount = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
-      updateData.totalAmount = totalAmount;
+      const subtotal = data.items.reduce((sum, item) => sum + item.quantity * item.unitPrice, 0);
+      const discount = resolveDiscount(subtotal, nextDiscountType, nextDiscountValue);
+      if (discount.error) {
+        return c.json({ success: false, message: discount.error }, 400);
+      }
+      updateData.totalAmount = discount.invoiceTotal;
+      updateData.discountType = discount.discountAmount > 0 ? (nextDiscountType ?? "FIXED") : null;
+      updateData.discountValue = discount.discountAmount > 0 ? nextDiscountValue : 0;
+      updateData.discountAmount = discount.discountAmount;
       updateData.items = {
         deleteMany: {},
         create: itemsWithCost,
       };
+    } else if (data.discountType !== undefined || data.discountValue !== undefined) {
+      const items = await prisma.salesOrderItem.findMany({ where: { salesOrderId: id } });
+      const subtotal = items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+      const discount = resolveDiscount(subtotal, nextDiscountType, nextDiscountValue);
+      if (discount.error) {
+        return c.json({ success: false, message: discount.error }, 400);
+      }
+      updateData.totalAmount = discount.invoiceTotal;
+      updateData.discountType = discount.discountAmount > 0 ? (nextDiscountType ?? "FIXED") : null;
+      updateData.discountValue = discount.discountAmount > 0 ? nextDiscountValue : 0;
+      updateData.discountAmount = discount.discountAmount;
     }
 
     const order = await prisma.salesOrder.update({

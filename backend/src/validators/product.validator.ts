@@ -47,5 +47,10 @@ export const productQuerySchema = z.object({
   status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]).optional(),
 });
 
+export const productBarcodeLookupSchema = z.object({
+  barcode: z.string().trim().min(1, "Barcode is required"),
+  warehouseId: z.string().min(1, "Please select a warehouse first"),
+});
+
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;

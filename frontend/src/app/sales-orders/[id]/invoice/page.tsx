@@ -76,8 +76,10 @@ export default function InvoicePage() {
 
   const sym = settings.currencySymbol || "Rs.";
   const subtotal = order.items.reduce((s, i) => s + Number(i.totalPrice), 0);
-  const taxAmount = settings.taxRate > 0 ? subtotal * (settings.taxRate / 100) : 0;
-  const grandTotal = subtotal + taxAmount;
+  const discountAmount = Number(order.discountAmount ?? 0);
+  const taxable = Math.max(0, subtotal - discountAmount);
+  const taxAmount = settings.taxRate > 0 ? taxable * (settings.taxRate / 100) : 0;
+  const grandTotal = taxable + taxAmount;
   const amountPaid = Number(order.amountPaid);
   const balanceDue = grandTotal - amountPaid;
 
@@ -218,6 +220,17 @@ export default function InvoicePage() {
             <div className="flex justify-between text-sm py-1.5 border-b border-gray-100">
               <span className="text-gray-500">Subtotal</span>
               <span className="font-medium text-gray-900">{formatCurrency(subtotal, sym)}</span>
+            </div>
+            <div className="flex justify-between text-sm py-1.5 border-b border-gray-100">
+              <span className="text-gray-500">
+                Discount / Savings
+                {order.discountType === "PERCENTAGE" && Number(order.discountValue) > 0
+                  ? ` (${Number(order.discountValue)}%)`
+                  : ""}
+              </span>
+              <span className="font-medium text-green-700">
+                {discountAmount > 0 ? `− ${formatCurrency(discountAmount, sym)}` : formatCurrency(0, sym)}
+              </span>
             </div>
             {settings.taxRate > 0 ? (
               <div className="flex justify-between text-sm py-1.5 border-b border-gray-100">

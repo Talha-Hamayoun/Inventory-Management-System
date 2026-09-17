@@ -1,14 +1,10 @@
 import type { ApiResponse } from "@/src/types/ApiResponse";
 import apiClient from "../client";
 
-// Types
 interface RegisterResponseData {
-    user: {
-        id: string;
-        name: string;
-        email: string;
-        role: string;
-    };
+    email: string;
+    requiresVerification: boolean;
+    id?: string;
 }
 
 type RegisterResponse = ApiResponse<{ data: RegisterResponseData }>;
