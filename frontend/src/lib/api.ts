@@ -1,6 +1,15 @@
 import { getDashboardStats } from "./api/dashboard/stats";
 import { getSettings } from "./api/settings/get";
 import { updateSettings } from "./api/settings/update";
+import {
+  listPosProducts,
+  getWalkInCustomer,
+  posCheckout,
+  listHeldSales,
+  createHeldSale,
+  deleteHeldSale,
+  type PosCheckoutRequest,
+} from "./api/pos";
 import type { CompanySettings } from "./api/settings/types";
 import { listSalesOrders } from "./api/sales-orders/list";
 import { getSalesOrder } from "./api/sales-orders/get";
@@ -379,6 +388,21 @@ export const salesOrdersApi = {
   updatePayment: (id: string, data: UpdatePaymentRequest) =>
     updatePayment(id, data),
   delete: (id: string) => deleteSalesOrder(id),
+};
+
+export const posApi = {
+  listProducts: (params: {
+    warehouseId: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    categoryId?: string;
+  }) => listPosProducts(params),
+  getWalkInCustomer: () => getWalkInCustomer(),
+  checkout: (data: PosCheckoutRequest) => posCheckout(data),
+  listHeld: () => listHeldSales(),
+  hold: (data: Parameters<typeof createHeldSale>[0]) => createHeldSale(data),
+  deleteHeld: (id: string) => deleteHeldSale(id),
 };
 
 // Stock Alerts API

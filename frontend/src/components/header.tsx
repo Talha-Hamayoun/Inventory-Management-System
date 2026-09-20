@@ -1,13 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Moon, Sun } from "lucide-react";
+import { Menu, Moon, Sun, ScanLine } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { useAuth } from "@/src/lib/auth-context";
 import { useTheme } from "@/src/lib/theme-context";
+import { Button } from "@/src/components/ui/button";
 
 const PAGE_META: { prefix: string; title: string; subtitle: string }[] = [
   { prefix: "/dashboard", title: "Dashboard", subtitle: "Overview of inventory and sales" },
+  { prefix: "/pos", title: "Point of Sale", subtitle: "Fast checkout and receipts" },
   { prefix: "/products", title: "Products", subtitle: "Manage your product catalog" },
   { prefix: "/categories", title: "Categories", subtitle: "Organize products by category" },
   { prefix: "/inventory", title: "Inventory", subtitle: "Stock levels across warehouses" },
@@ -36,9 +39,11 @@ function getPageMeta(pathname: string) {
 
 export function Header({ onMenuClick }: { onMenuClick: () => void }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, hasAnyPermission } = useAuth();
   const { theme, setTheme } = useTheme();
   const meta = getPageMeta(pathname);
+  const canOpenPos = hasAnyPermission(["pos:view", "pos:create-sale", "sales-orders:create"]);
+  const onPosPage = pathname === "/pos" || pathname.startsWith("/pos/");
 
   return (
     <header className="fixed top-0 right-0 left-0 lg:left-64 z-30 h-16">
@@ -62,6 +67,19 @@ export function Header({ onMenuClick }: { onMenuClick: () => void }) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
+            {canOpenPos && !onPosPage && (
+              <Link href="/pos" className="shrink-0">
+                <Button
+                  type="button"
+                  size="sm"
+                  className="h-9 gap-1.5 rounded-xl bg-blue-600 px-3 text-xs font-semibold shadow-sm shadow-blue-600/20 hover:bg-blue-700 sm:text-sm"
+                >
+                  <ScanLine className="h-4 w-4" />
+                  <span className="hidden sm:inline">POS / New Sale</span>
+                  <span className="sm:hidden">POS</span>
+                </Button>
+              </Link>
+            )}
             <div
               className="flex items-center rounded-full bg-gray-100/90 dark:bg-white/8 p-1 border border-gray-200/80 dark:border-white/10"
               role="group"

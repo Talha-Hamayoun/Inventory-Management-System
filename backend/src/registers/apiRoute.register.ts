@@ -15,6 +15,7 @@ import alertsRoutes from "../routes/alerts.route";
 import auditLogsRoutes from "../routes/audit-logs.route";
 import customersRoutes from "../routes/customers.route";
 import salesOrdersRoutes from "../routes/sales-orders.route";
+import posRoutes from "../routes/pos.route";
 import dashboardRoutes from "../routes/dashboard.route";
 import settingsRoutes from "../routes/settings.route";
 
@@ -35,6 +36,7 @@ export function registerApiRoutes(app: Hono) {
   api.route("/alerts", alertsRoutes);
   api.route("/customers", customersRoutes);
   api.route("/sales-orders", salesOrdersRoutes);
+  api.route("/pos", posRoutes);
   api.route("/audit-logs", auditLogsRoutes);
   api.route("/dashboard", dashboardRoutes);
   api.route("/settings", settingsRoutes);

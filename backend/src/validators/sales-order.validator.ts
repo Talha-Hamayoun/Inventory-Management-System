@@ -8,6 +8,7 @@ export const paymentMethodEnum = z.enum([
   "BANK_TRANSFER",
   "CARD",
   "UPI",
+  "OTHER",
 ]);
 
 export const discountTypeEnum = z.enum(["FIXED", "PERCENTAGE"]);

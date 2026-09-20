@@ -96,6 +96,7 @@ enum PaymentMethod {
   BANK_TRANSFER
   CARD
   UPI
+  OTHER
 }
 
 enum DiscountType {
@@ -142,6 +143,7 @@ model User {
   // Relations
   purchaseOrdersCreated PurchaseOrder[]     @relation("PurchaseOrderCreator")
   salesOrdersCreated    SalesOrder[]        @relation("SalesOrderCreator")
+  posHeldSales          PosHeldSale[]       @relation("PosHeldSaleCreator")
   inventoryMovements    InventoryMovement[] @relation("MovementPerformedBy")
   returnsProcessed      ReturnOrder[]       @relation("ReturnProcessedBy")
   auditLogs             AuditLog[]          @relation("AuditLogUser")
@@ -250,6 +252,7 @@ model Warehouse {
   inventoryMovements InventoryMovement[]
   purchaseOrders     PurchaseOrder[]
   salesOrders        SalesOrder[]
+  posHeldSales       PosHeldSale[]
   stockReservations  StockReservation[]
   stockAlerts        StockAlert[]
   returns            ReturnOrder[]
@@ -477,7 +480,8 @@ model Customer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  salesOrders SalesOrder[]
+  salesOrders  SalesOrder[]
+  posHeldSales PosHeldSale[]
 
   @@index([name])
   @@index([phone])
@@ -500,6 +504,8 @@ model SalesOrder {
   paymentStatus PaymentStatus    @default(UNPAID)
   amountPaid    Decimal          @default(0) @db.Decimal(14, 2)
   paymentMethod PaymentMethod?
+  amountReceived Decimal?        @db.Decimal(14, 2)
+  changeDue      Decimal?        @db.Decimal(14, 2)
   isDeleted     Boolean          @default(false)
   createdBy     Int
   createdAt     DateTime         @default(now())
@@ -515,6 +521,27 @@ model SalesOrder {
   @@index([warehouseId])
   @@index([status])
   @@index([orderNumber])
+  @@index([createdAt])
+}
+
+// ==================== POS HELD / SUSPENDED SALES ====================
+
+model PosHeldSale {
+  id          Int      @id @default(autoincrement())
+  label       String?
+  warehouseId Int
+  customerId  Int?
+  cartData    Json
+  createdBy   Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+  customer  Customer? @relation(fields: [customerId], references: [id])
+  createdByUser User  @relation("PosHeldSaleCreator", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([createdBy])
+  @@index([warehouseId])
   @@index([createdAt])
 }
 

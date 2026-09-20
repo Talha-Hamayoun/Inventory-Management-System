@@ -42,7 +42,7 @@ export async function loginController(c: Context) {
 
         setCookie(c, "token", token, {
             httpOnly: true,
-            secure: true,
+            secure: new URL(c.req.url).protocol === "https:",
             sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60,
         });

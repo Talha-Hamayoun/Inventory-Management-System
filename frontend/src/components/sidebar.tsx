@@ -26,11 +26,13 @@ import {
   Building2,
   ClipboardList,
   ShoppingBag,
+  ScanLine,
 } from "lucide-react";
 import { useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard, permission: null },
+  { name: "POS", href: "/pos", icon: ScanLine, permission: "pos:view" },
   { name: "Products", href: "/products", icon: Package, permission: "products:read" },
   { name: "Categories", href: "/categories", icon: FolderTree, permission: "categories:read" },
   { name: "Inventory", href: "/inventory", icon: Warehouse, permission: "inventory:read" },
@@ -58,9 +60,17 @@ export function Sidebar({
   const { user, logout, hasPermission } = useAuth();
   const [menuOpen, setMenuOpen] = useState(true);
 
-  const filteredNav = navigation.filter(
-    (item) => !item.permission || hasPermission(item.permission)
-  );
+  const filteredNav = navigation.filter((item) => {
+    if (!item.permission) return true;
+    if (item.href === "/pos") {
+      return (
+        hasPermission(item.permission) ||
+        hasPermission("pos:create-sale") ||
+        hasPermission("sales-orders:create")
+      );
+    }
+    return hasPermission(item.permission);
+  });
 
   const isItemActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
