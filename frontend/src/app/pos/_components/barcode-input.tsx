@@ -10,6 +10,7 @@ interface BarcodeInputProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: (code: string) => void;
+  onOpenScanner?: () => void;
   disabled?: boolean;
   loading?: boolean;
   className?: string;
@@ -18,7 +19,7 @@ interface BarcodeInputProps {
 
 /**
  * Keyboard / USB barcode scanner field.
- * Scanners typically send characters then Enter — handled here without redesign.
+ * Optional camera scanner opens via the barcode icon.
  */
 export const BarcodeInput = forwardRef<HTMLInputElement, BarcodeInputProps>(
   function BarcodeInput(
@@ -27,6 +28,7 @@ export const BarcodeInput = forwardRef<HTMLInputElement, BarcodeInputProps>(
       value,
       onChange,
       onSubmit,
+      onOpenScanner,
       disabled,
       loading,
       className,
@@ -52,7 +54,21 @@ export const BarcodeInput = forwardRef<HTMLInputElement, BarcodeInputProps>(
           </span>
         </label>
         <div className="relative">
-          <ScanLine className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-blue-600 dark:text-blue-400" />
+          <button
+            type="button"
+            disabled={disabled || loading || !onOpenScanner}
+            onClick={onOpenScanner}
+            className={cn(
+              "absolute left-1.5 top-1/2 z-10 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md text-blue-600 transition dark:text-blue-400",
+              onOpenScanner && !disabled && !loading
+                ? "cursor-pointer hover:bg-blue-100 hover:text-blue-800 dark:hover:bg-blue-500/20"
+                : "pointer-events-none"
+            )}
+            title={onOpenScanner ? "Open camera barcode scanner" : undefined}
+            aria-label={onOpenScanner ? "Open camera barcode scanner" : undefined}
+          >
+            <ScanLine className="h-4 w-4" />
+          </button>
           <Input
             ref={ref}
             id={id}
@@ -64,7 +80,7 @@ export const BarcodeInput = forwardRef<HTMLInputElement, BarcodeInputProps>(
             spellCheck={false}
             inputMode="numeric"
             placeholder={placeholder}
-            className="h-10 border-blue-200 bg-gray-50 pl-9 font-mono text-sm tracking-wide focus:ring-blue-600 dark:border-blue-500/30"
+            className="h-10 border-blue-200 bg-gray-50 pl-10 font-mono text-sm tracking-wide focus:ring-blue-600 dark:border-blue-500/30"
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key !== "Enter") return;

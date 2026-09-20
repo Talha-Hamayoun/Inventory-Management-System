@@ -15,6 +15,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import type { Category, ProductDetail } from "@/src/lib/api/products/types";
+import { buildEan13, isValidEan13 } from "@/src/lib/ean13";
 
 const productSchema = z.object({
     name: z.string().min(1, "Name is required"),
@@ -23,7 +24,13 @@ const productSchema = z.object({
     status: z.enum(["ACTIVE", "INACTIVE", "ARCHIVED"]),
     categoryId: z.string().min(1, "Category is required"),
     unitOfMeasure: z.enum(["PCS", "KG", "LITERS", "METERS", "BOXES"]),
-    barcode: z.string().optional(),
+    barcode: z
+        .string()
+        .optional()
+        .refine(
+            (value) => !value || !value.trim() || isValidEan13(value.trim()),
+            "Enter a valid 13-digit EAN-13 barcode (or leave blank)"
+        ),
     costPrice: z.union([z.coerce.number().min(0, "Cost price must be non-negative"), z.literal("")]).optional(),
     sellingPrice: z.union([z.coerce.number().min(0, "Selling price must be non-negative"), z.literal("")]).optional(),
 }).refine(
@@ -53,6 +60,8 @@ export function ProductForm({ productId, categories, initialData, backUrl }: Pro
     const {
         register,
         handleSubmit,
+        setValue,
+        watch,
         formState: { errors },
     } = useForm<ProductFormData>({
         resolver: zodResolver(productSchema),
@@ -71,16 +80,26 @@ export function ProductForm({ productId, categories, initialData, backUrl }: Pro
             : {
                 status: "ACTIVE",
                 unitOfMeasure: "PCS",
+                barcode: "",
                 costPrice: "",
                 sellingPrice: "",
             },
     });
+
+    const barcodeValue = watch("barcode") || "";
+
+    const fillGeneratedBarcode = () => {
+        const next = buildEan13("2");
+        setValue("barcode", next, { shouldDirty: true, shouldValidate: true });
+        toast.success(`EAN-13 generated: ${next}`);
+    };
 
     const onSubmit = async (data: ProductFormData): Promise<void> => {
         setLoading(true);
         try {
             const payload = {
                 ...data,
+                barcode: data.barcode?.trim() ? data.barcode.trim() : undefined,
                 costPrice: data.costPrice === "" || data.costPrice === undefined ? undefined : Number(data.costPrice),
                 sellingPrice: data.sellingPrice === "" || data.sellingPrice === undefined ? undefined : Number(data.sellingPrice),
             };
@@ -175,8 +194,37 @@ export function ProductForm({ productId, categories, initialData, backUrl }: Pro
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Barcode</label>
-                            <Input {...register("barcode")} placeholder="Enter barcode" />
+                            <label className="mb-1 block text-sm font-medium text-gray-700" htmlFor="product-barcode">
+                                Barcode
+                            </label>
+                            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                <Input
+                                    id="product-barcode"
+                                    {...register("barcode")}
+                                    placeholder="Enter EAN-13 or generate"
+                                    autoComplete="off"
+                                    inputMode="numeric"
+                                    disabled
+                                    className="bg-white text-gray-900 placeholder:text-gray-500 dark:bg-gray-100 dark:text-gray-900 dark:placeholder:text-gray-500"
+                                />
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="shrink-0"
+                                    onClick={fillGeneratedBarcode}
+                                >
+                                    Generate EAN-13
+                                </Button>
+                            </div>
+                            <p className="mt-1 text-xs text-gray-500">
+                                Optional. Use a valid EAN-13 for camera scanning, or leave blank and generate later from Inventory.
+                                {barcodeValue.trim() && !isValidEan13(barcodeValue.trim()) && (
+                                    <span className="ml-1 text-amber-600"> Current value is not a valid EAN-13.</span>
+                                )}
+                            </p>
+                            {errors.barcode && (
+                                <p className="mt-1 text-sm text-red-500">{errors.barcode.message as string}</p>
+                            )}
                         </div>
                     </CardContent>
                 </Card>

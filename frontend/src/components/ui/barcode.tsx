@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/src/lib/utils";
+import { isValidEan13 } from "@/src/lib/ean13";
 
 const EAN13_L = [
   "0001101", "0011001", "0010011", "0111101", "0100011",
@@ -88,17 +89,19 @@ function bitsToModules(bits: string): { x: number; width: number }[] {
 }
 
 function ean13Bits(value: string): string | null {
-  if (!/^\d{13}$/.test(value)) return null;
+  // Only encode valid EAN-13 (correct check digit) so printed labels scan reliably
+  if (!isValidEan13(value)) return null;
   const first = Number(value[0]);
   const parity = EAN13_PARITY[first];
+  if (!parity) return null;
   let bits = "101";
   for (let i = 0; i < 6; i += 1) {
     const digit = Number(value[i + 1]);
-    bits += parity[i] === "L" ? EAN13_L[digit] : EAN13_G[digit];
+    bits += parity[i] === "L" ? EAN13_L[digit]! : EAN13_G[digit]!;
   }
   bits += "01010";
   for (let i = 7; i < 13; i += 1) {
-    bits += EAN13_R[Number(value[i])];
+    bits += EAN13_R[Number(value[i])]!;
   }
   bits += "101";
   return bits;

@@ -225,7 +225,8 @@ export const productsApi = {
   get: (id: string) => getProduct(id),
   lookupByBarcode: (barcode: string, warehouseId: string) =>
     lookupProductByBarcode(barcode, warehouseId),
-  generateBarcode: (id: string) => generateProductBarcode(id),
+  generateBarcode: (id: string, options?: { force?: boolean }) =>
+    generateProductBarcode(id, options),
   create: (data: CreateProductRequest) => createProduct(data),
   update: (id: string, data: UpdateProductRequest) => updateProduct(id, data),
   delete: (id: string) => deleteProduct(id),

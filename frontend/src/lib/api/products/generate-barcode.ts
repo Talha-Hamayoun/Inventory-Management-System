@@ -11,11 +11,14 @@ export interface GeneratedBarcode {
 export type GenerateBarcodeResponse = ApiResponse<{
   data: GeneratedBarcode;
   generated: boolean;
+  repaired?: boolean;
 }>;
 
-export async function generateProductBarcode(id: string) {
+export async function generateProductBarcode(id: string, options?: { force?: boolean }) {
   try {
-    const response = await apiClient.post(`/products/${id}/barcode`);
+    const response = await apiClient.post(`/products/${id}/barcode`, null, {
+      params: options?.force ? { force: true } : undefined,
+    });
     return { data: response.data as GenerateBarcodeResponse, status: response.status };
   } catch (error) {
     return { error };

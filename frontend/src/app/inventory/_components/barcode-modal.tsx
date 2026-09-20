@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { BarcodeLabel, BarcodeSvg, printBarcode } from "@/src/components/ui/barcode";
+import { isValidEan13 } from "@/src/lib/ean13";
 import { Button } from "@/src/components/ui/button";
 import { Loading } from "@/src/components/ui/loading";
 import { Modal, ModalContent, ModalFooter, ModalHeader, ModalTitle } from "@/src/components/ui/modal";
@@ -31,11 +32,11 @@ export function BarcodeModal({ item, isOpen, onClose, onGenerated }: BarcodeModa
     if (!isOpen) setShowPreview(false);
   }, [isOpen, item?.id]);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (force = false) => {
     if (!item) return;
     setGenerating(true);
     try {
-      const response = await productsApi.generateBarcode(item.product.id);
+      const response = await productsApi.generateBarcode(item.product.id, { force });
       if (!response.data || response.error || response.data.success === false) {
         const message =
           response.data && "message" in response.data
@@ -46,7 +47,13 @@ export function BarcodeModal({ item, isOpen, onClose, onGenerated }: BarcodeModa
       }
       const next = response.data.data.barcode;
       onGenerated(item.product.id, next);
-      toast.success(response.data.generated ? "Barcode generated" : "Barcode already assigned");
+      if (response.data.repaired) {
+        toast.success(`Barcode fixed to valid EAN-13: ${next}. Reprint labels.`);
+      } else if (response.data.generated) {
+        toast.success(force ? `New barcode assigned: ${next}. Reprint labels.` : "Barcode generated");
+      } else {
+        toast.success("Barcode already assigned");
+      }
     } finally {
       setGenerating(false);
     }
@@ -118,6 +125,13 @@ export function BarcodeModal({ item, isOpen, onClose, onGenerated }: BarcodeModa
               <p>
                 <span className="text-gray-500">Barcode Number</span>
                 <span className="block font-mono font-semibold text-gray-900">{barcode || "Not assigned"}</span>
+                {barcode && (
+                  <span className="mt-0.5 block text-[11px] text-gray-500">
+                    {isValidEan13(barcode)
+                      ? "Format: EAN-13 (camera-ready)"
+                      : "Invalid EAN-13 check digit — camera misreads this. Click Fix EAN-13, then reprint."}
+                  </span>
+                )}
               </p>
               <p>
                 <span className="text-gray-500">Available Quantity</span>
@@ -142,7 +156,17 @@ export function BarcodeModal({ item, isOpen, onClose, onGenerated }: BarcodeModa
           Close
         </Button>
         {barcode ? (
-          <div className="flex flex-col items-end gap-1">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {canGenerate && barcode && !isValidEan13(barcode) && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void handleGenerate(false)}
+                disabled={generating}
+              >
+                {generating ? <Loading size="sm" /> : "Fix EAN-13"}
+              </Button>
+            )}
             <Button
               type="button"
               onClick={handlePrint}
@@ -153,13 +177,10 @@ export function BarcodeModal({ item, isOpen, onClose, onGenerated }: BarcodeModa
               <Printer className="h-4 w-4" />
               Print Barcode{canPrint ? ` (${availableQuantity})` : ""}
             </Button>
-            {!canPrint && (
-              <p className="text-xs text-gray-500">No available quantity to print</p>
-            )}
           </div>
         ) : (
           canGenerate && (
-            <Button type="button" onClick={handleGenerate} disabled={generating}>
+            <Button type="button" onClick={() => void handleGenerate(false)} disabled={generating}>
               {generating ? <Loading size="sm" /> : "Generate Barcode"}
             </Button>
           )

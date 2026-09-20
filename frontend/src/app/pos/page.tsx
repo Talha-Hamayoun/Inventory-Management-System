@@ -20,6 +20,7 @@ import {
   PauseCircle,
   Warehouse as WarehouseIcon,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { BarcodeInput } from "./_components/barcode-input";
 import { ProductSearch } from "./_components/product-search";
 import { CategoryFilter } from "./_components/category-filter";
@@ -30,6 +31,12 @@ import { CustomerSelector } from "./_components/customer-selector";
 import { PaymentModal } from "./_components/payment-modal";
 import { Receipt } from "./_components/receipt";
 import { HeldSalesModal } from "./_components/held-sales-modal";
+
+const BarcodeScannerModal = dynamic(
+  () =>
+    import("./_components/barcode-scanner-modal").then((m) => m.BarcodeScannerModal),
+  { ssr: false }
+);
 
 type Warehouse = { id: string; name: string };
 type Category = { id: string; name: string };
@@ -68,6 +75,7 @@ export default function PosPage() {
   const debouncedSearch = useDebounced(search, 300);
   const [barcode, setBarcode] = useState("");
   const [barcodeLoading, setBarcodeLoading] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
   const [products, setProducts] = useState<PosProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -152,11 +160,12 @@ export default function PosPage() {
     loadProducts();
   }, [loadProducts]);
 
-  const addProductToCart = useCallback((product: PosProduct, qty = 1) => {
+  const addProductToCart = useCallback((product: PosProduct, qty = 1): boolean => {
     if (product.availableQuantity <= 0) {
       toast.error("Out of stock");
-      return;
+      return false;
     }
+    let added = false;
     setCart((prev) => {
       const existing = prev.find((i) => i.productId === product.id);
       if (existing) {
@@ -165,10 +174,12 @@ export default function PosPage() {
           toast.error("Cannot exceed available stock");
           return prev;
         }
+        added = true;
         return prev.map((i) =>
           i.productId === product.id ? { ...i, quantity: nextQty } : i
         );
       }
+      added = true;
       return [
         ...prev,
         {
@@ -183,42 +194,55 @@ export default function PosPage() {
         },
       ];
     });
+    return added;
   }, []);
 
-  const handleBarcodeSubmit = async (code: string) => {
-    if (!warehouseId) {
-      toast.error("Select a warehouse first");
-      return;
-    }
-    setBarcodeLoading(true);
-    const res = await productsApi.lookupByBarcode(code, warehouseId);
-    setBarcodeLoading(false);
-    if (res.data?.success && res.data.data) {
-      const p = res.data.data;
-      addProductToCart(
-        {
-          id: p.id,
-          name: p.name,
-          sku: p.sku,
-          barcode: p.barcode,
-          sellingPrice: p.sellingPrice != null ? String(p.sellingPrice) : "0",
-          availableQuantity: p.availableQuantity ?? 0,
-          outOfStock: (p.availableQuantity ?? 0) <= 0,
-          status: "ACTIVE",
-          category: null,
-        },
-        1
-      );
-      setBarcode("");
-      requestAnimationFrame(() => barcodeRef.current?.focus());
-    } else {
+  const handleBarcodeSubmit = useCallback(
+    async (code: string, options?: { successToast?: boolean }): Promise<boolean> => {
+      const trimmed = code.trim();
+      if (!trimmed) return false;
+      if (!warehouseId) {
+        toast.error("Select a warehouse first");
+        return false;
+      }
+      setBarcodeLoading(true);
+      const res = await productsApi.lookupByBarcode(trimmed, warehouseId);
+      setBarcodeLoading(false);
+      if (res.data?.success && res.data.data) {
+        const p = res.data.data;
+        const ok = addProductToCart(
+          {
+            id: p.id,
+            name: p.name,
+            sku: p.sku,
+            barcode: p.barcode,
+            sellingPrice: p.sellingPrice != null ? String(p.sellingPrice) : "0",
+            availableQuantity: p.availableQuantity ?? 0,
+            outOfStock: (p.availableQuantity ?? 0) <= 0,
+            status: "ACTIVE",
+            category: null,
+          },
+          1
+        );
+        if (ok) {
+          if (options?.successToast) {
+            toast.success(`Added ${p.name}`);
+          }
+          setBarcode("");
+          requestAnimationFrame(() => barcodeRef.current?.focus());
+          return true;
+        }
+        return false;
+      }
       const message =
         res.data && "message" in res.data
           ? String((res.data as { message?: string }).message || "Product not found for this barcode")
           : "Product not found for this barcode";
       toast.error(message);
-    }
-  };
+      return false;
+    },
+    [warehouseId, addProductToCart]
+  );
 
   const increaseQty = (productId: string) => {
     setCart((prev) =>
@@ -485,7 +509,16 @@ export default function PosPage() {
                   ref={barcodeRef}
                   value={barcode}
                   onChange={setBarcode}
-                  onSubmit={handleBarcodeSubmit}
+                  onSubmit={(code) => {
+                    void handleBarcodeSubmit(code);
+                  }}
+                  onOpenScanner={() => {
+                    if (!warehouseId) {
+                      toast.error("Select a warehouse first");
+                      return;
+                    }
+                    setScannerOpen(true);
+                  }}
                   loading={barcodeLoading}
                   disabled={!warehouseId}
                 />
@@ -599,6 +632,16 @@ export default function PosPage() {
         submitting={submitting}
         onClose={() => setPayOpen(false)}
         onConfirm={completeSale}
+      />
+
+      <BarcodeScannerModal
+        isOpen={scannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onScan={async (code) => {
+          const ok = await handleBarcodeSubmit(code, { successToast: true });
+          if (ok) setScannerOpen(false);
+          return ok;
+        }}
       />
 
       <Receipt

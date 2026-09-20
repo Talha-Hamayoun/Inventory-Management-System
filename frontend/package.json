@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev -p 5332",
     "build": "next build",
-    "start": "cross-env PORT=5000 bun .next/standalone/server.js",
+    "start": "next start -p 5332",
     "lint": "eslint",
     "type-check": "tsc --noEmit --watch --preserveWatchOutput"
   },
@@ -22,7 +22,8 @@
     "recharts": "^3.7.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.4.0",
-    "zod": "^4.3.6"
+    "zod": "^4.3.6",
+    "zxing-wasm": "2.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
