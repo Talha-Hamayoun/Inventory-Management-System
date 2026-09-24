@@ -14,7 +14,7 @@ import { createStockReservationSchema, updateStockReservationSchema, reservation
 import { createReturnSchema, processReturnSchema, returnQuerySchema } from "./return.validator";
 import { createStockAlertSchema, updateStockAlertSchema } from "./alert.validator";
 import { createCustomerSchema, updateCustomerSchema, customerQuerySchema } from "./customer.validator";
-import { createSalesOrderSchema, updateSalesOrderSchema, updateSalesOrderStatusSchema, salesOrderQuerySchema, updatePaymentSchema } from "./sales-order.validator";
+import { createSalesOrderSchema, updateSalesOrderSchema, updateSalesOrderStatusSchema, salesOrderQuerySchema, updatePaymentSchema, addSalesOrderItemsSchema } from "./sales-order.validator";
 import { posCheckoutSchema, posProductQuerySchema, posHoldSchema } from "./pos.validator";
 import { auditQuerySchema } from "./audit-log.validator";
 
@@ -62,6 +62,7 @@ export const validator = {
   updateSalesOrder: updateSalesOrderSchema,
   updateSalesOrderStatus: updateSalesOrderStatusSchema,
   updatePayment: updatePaymentSchema,
+  addSalesOrderItems: addSalesOrderItemsSchema,
   salesOrderQuery: salesOrderQuerySchema,
   posCheckout: posCheckoutSchema,
   posProductQuery: posProductQuerySchema,
@@ -115,6 +116,7 @@ export type Validator = {
   UpdateSalesOrder: z.infer<typeof validator.updateSalesOrder>;
   UpdateSalesOrderStatus: z.infer<typeof validator.updateSalesOrderStatus>;
   UpdatePayment: z.infer<typeof validator.updatePayment>;
+  AddSalesOrderItems: z.infer<typeof validator.addSalesOrderItems>;
   SalesOrderQuery: z.infer<typeof validator.salesOrderQuery>;
   PosCheckout: z.infer<typeof validator.posCheckout>;
   PosProductQuery: z.infer<typeof validator.posProductQuery>;

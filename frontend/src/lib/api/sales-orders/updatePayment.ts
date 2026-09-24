@@ -4,6 +4,8 @@ import type { PaymentMethod } from "./types";
 export interface UpdatePaymentRequest {
   amountPaid: number;
   paymentMethod?: PaymentMethod;
+  amountReceived?: number;
+  changeDue?: number;
 }
 
 export async function updatePayment(id: string, data: UpdatePaymentRequest) {

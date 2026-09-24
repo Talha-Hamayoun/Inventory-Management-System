@@ -9,13 +9,14 @@ import { Select } from "@/src/components/ui/select";
 import { PageLoading } from "@/src/components/ui/loading";
 import { LayoutBackground } from "@/src/components/layout-background";
 import { useAuth } from "@/src/lib/auth-context";
-import { categoriesApi, posApi, productsApi, warehousesApi } from "@/src/lib/api";
+import { categoriesApi, posApi, productsApi, salesOrdersApi, warehousesApi } from "@/src/lib/api";
 import type { PosCartItem, PosHeldSale, PosProduct } from "@/src/lib/api/pos";
 import type { DiscountType, PaymentMethod, SalesOrder } from "@/src/lib/api/sales-orders/types";
 import { resolveDiscount } from "@/src/lib/sales-order-discount";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  History,
   LayoutDashboard,
   PauseCircle,
   Warehouse as WarehouseIcon,
@@ -31,6 +32,7 @@ import { CustomerSelector } from "./_components/customer-selector";
 import { PaymentModal } from "./_components/payment-modal";
 import { Receipt } from "./_components/receipt";
 import { HeldSalesModal } from "./_components/held-sales-modal";
+import { RecentSalesModal } from "./_components/recent-sales-modal";
 
 const BarcodeScannerModal = dynamic(
   () =>
@@ -64,6 +66,11 @@ export default function PosPage() {
     "sales-orders:create",
   ]);
   const canCreateCustomer = hasPermission("customers:create") || hasPermission("*");
+  const canUpdatePayment = hasAnyPermission([
+    "sales-orders:update",
+    "pos:create-sale",
+    "*",
+  ]);
 
   const barcodeRef = useRef<HTMLInputElement>(null);
 
@@ -97,6 +104,10 @@ export default function PosPage() {
   const [heldOpen, setHeldOpen] = useState(false);
   const [heldSales, setHeldSales] = useState<PosHeldSale[]>([]);
   const [heldLoading, setHeldLoading] = useState(false);
+
+  const [recentOpen, setRecentOpen] = useState(false);
+  const [recentSales, setRecentSales] = useState<SalesOrder[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -313,6 +324,21 @@ export default function PosPage() {
     setHeldLoading(false);
   };
 
+  const loadRecentSales = useCallback(async () => {
+    setRecentLoading(true);
+    const res = await salesOrdersApi.list({
+      status: "FULFILLED",
+      page: 1,
+      limit: 25,
+    });
+    if (res.data?.success) {
+      setRecentSales(res.data.data || []);
+    } else {
+      toast.error("Failed to load completed sales");
+    }
+    setRecentLoading(false);
+  }, []);
+
   const holdSale = async () => {
     if (!canHold || !warehouseId || cart.length === 0) return;
     setHolding(true);
@@ -380,7 +406,9 @@ export default function PosPage() {
     });
     setSubmitting(false);
     if (res.data?.success && res.data.data) {
-      setCompletedOrder(res.data.data as SalesOrder);
+      const order = res.data.data as SalesOrder;
+      setCompletedOrder(order);
+      setRecentSales((prev) => [order, ...prev.filter((s) => s.id !== order.id)].slice(0, 25));
       setPayOpen(false);
       setReceiptOpen(true);
       clearCart();
@@ -389,6 +417,17 @@ export default function PosPage() {
     } else {
       toast.error(res.data?.message || "Checkout failed");
     }
+  };
+
+  const openRecentSaleReceipt = async (sale: SalesOrder) => {
+    const res = await salesOrdersApi.get(sale.id);
+    if (res.data?.success && res.data.data) {
+      setCompletedOrder(res.data.data);
+      setReceiptOpen(true);
+      setRecentOpen(false);
+      return;
+    }
+    toast.error(res.data?.message || "Failed to load receipt");
   };
 
   if (authLoading || !user) {
@@ -455,6 +494,18 @@ export default function PosPage() {
                 ))}
               </Select>
             </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 gap-2 rounded-xl bg-gray-50"
+              onClick={async () => {
+                setRecentOpen(true);
+                await loadRecentSales();
+              }}
+            >
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Recent Sales</span>
+            </Button>
             {canHold && (
               <Button
                 type="button"
@@ -663,6 +714,28 @@ export default function PosPage() {
         onClose={() => setHeldOpen(false)}
         onResume={resumeHeld}
         onDelete={deleteHeld}
+      />
+
+      <RecentSalesModal
+        isOpen={recentOpen}
+        sales={recentSales}
+        loading={recentLoading}
+        canUpdate={canUpdatePayment}
+        onClose={() => setRecentOpen(false)}
+        onRefresh={loadRecentSales}
+        onUpdated={(order) => {
+          if (!order?.id) return;
+          setRecentSales((prev) =>
+            prev.map((s) => (s.id === order.id ? { ...s, ...order } : s))
+          );
+          setCompletedOrder((prev) =>
+            prev?.id === order.id ? { ...prev, ...order } : prev
+          );
+          void loadProducts();
+        }}
+        onViewReceipt={(sale) => {
+          void openRecentSaleReceipt(sale);
+        }}
       />
     </div>
   );

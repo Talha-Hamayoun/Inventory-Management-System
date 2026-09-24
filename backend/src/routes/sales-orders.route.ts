@@ -10,6 +10,7 @@ import { updateSalesOrderController } from "../controllers/sales-orders/updateSa
 import { updateSalesOrderStatusController } from "../controllers/sales-orders/updateSalesOrderStatus";
 import { deleteSalesOrderController } from "../controllers/sales-orders/deleteSalesOrder";
 import { updatePaymentController } from "../controllers/sales-orders/updatePayment";
+import { addSalesOrderItemsController } from "../controllers/sales-orders/addItems";
 
 const salesOrdersRoutes = new Hono();
 
@@ -20,7 +21,18 @@ salesOrdersRoutes.get("/:id", getSalesOrderController);
 salesOrdersRoutes.post("/", authorize(["sales-orders:create"]), apiValidator("json", validator.createSalesOrder), createSalesOrderController);
 salesOrdersRoutes.put("/:id", authorize(["sales-orders:update"]), apiValidator("json", validator.updateSalesOrder), updateSalesOrderController);
 salesOrdersRoutes.post("/:id/status", authorize(["sales-orders:update"]), apiValidator("json", validator.updateSalesOrderStatus), updateSalesOrderStatusController);
-salesOrdersRoutes.patch("/:id/payment", authorize(["sales-orders:update"]), apiValidator("json", validator.updatePayment), updatePaymentController);
+salesOrdersRoutes.post(
+  "/:id/items",
+  authorize(["sales-orders:update", "pos:create-sale"]),
+  apiValidator("json", validator.addSalesOrderItems),
+  addSalesOrderItemsController
+);
+salesOrdersRoutes.patch(
+  "/:id/payment",
+  authorize(["sales-orders:update", "pos:create-sale"]),
+  apiValidator("json", validator.updatePayment),
+  updatePaymentController
+);
 salesOrdersRoutes.delete("/:id", authorize(["sales-orders:delete"]), deleteSalesOrderController);
 
 export default salesOrdersRoutes;

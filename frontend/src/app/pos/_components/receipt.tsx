@@ -134,7 +134,7 @@ export function Receipt({ isOpen, order, onClose, onNewSale }: ReceiptProps) {
 
   const subtotal =
     order.subtotal ??
-    order.items.reduce((sum, item) => sum + Number(item.totalPrice), 0);
+    (order.items ?? []).reduce((sum, item) => sum + Number(item.totalPrice), 0);
   const discountAmount = Number(order.discountAmount ?? 0);
   const tax = order.tax ?? 0;
   const received = Number(order.amountReceived ?? order.amountPaid ?? order.totalAmount);
@@ -197,10 +197,10 @@ export function Receipt({ isOpen, order, onClose, onNewSale }: ReceiptProps) {
                 Items
               </p>
               <div className="space-y-3">
-                {order.items.map((item) => (
+                {(order.items ?? []).map((item) => (
                   <div key={item.id} className="border-b border-dashed border-gray-100 pb-3 last:border-0 last:pb-0">
                     <p className="text-sm font-semibold leading-snug text-gray-900">
-                      {item.product.name}
+                      {item.product?.name ?? "Product"}
                     </p>
                     <div className="mt-1 flex items-center justify-between gap-3 text-xs text-gray-500">
                       <span>

@@ -27,6 +27,10 @@ import {
   updatePayment,
   type UpdatePaymentRequest,
 } from "./api/sales-orders/updatePayment";
+import {
+  addSalesOrderItems,
+  type AddSalesOrderItemsRequest,
+} from "./api/sales-orders/addItems";
 import { createAlert, type CreateAlertRequest } from "./api/alerts/create";
 import { deleteAlert } from "./api/alerts/delete";
 import { getAlert } from "./api/alerts/get";
@@ -388,6 +392,8 @@ export const salesOrdersApi = {
     updateSalesOrderStatus(id, status),
   updatePayment: (id: string, data: UpdatePaymentRequest) =>
     updatePayment(id, data),
+  addItems: (id: string, data: AddSalesOrderItemsRequest) =>
+    addSalesOrderItems(id, data),
   delete: (id: string) => deleteSalesOrder(id),
 };
 

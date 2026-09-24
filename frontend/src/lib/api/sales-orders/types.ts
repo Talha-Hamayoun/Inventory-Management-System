@@ -45,6 +45,8 @@ export interface SalesOrder {
   paymentStatus: PaymentStatus;
   amountPaid: string;
   paymentMethod: PaymentMethod | null;
+  amountReceived?: string | number | null;
+  changeDue?: string | number | null;
   isDeleted: boolean;
   createdBy: string;
   createdAt: string;

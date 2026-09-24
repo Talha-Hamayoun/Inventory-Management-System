@@ -46,6 +46,16 @@ export const updateSalesOrderStatusSchema = z.object({
 export const updatePaymentSchema = z.object({
   amountPaid: z.coerce.number().min(0, "Amount paid must be non-negative"),
   paymentMethod: paymentMethodEnum.optional(),
+  amountReceived: z.coerce.number().min(0).optional(),
+  changeDue: z.coerce.number().min(0).optional(),
+});
+
+export const addSalesOrderItemsSchema = z.object({
+  items: z.array(salesOrderItemSchema).min(1, "At least one item is required"),
+  amountPaid: z.coerce.number().min(0, "Amount paid must be non-negative").optional(),
+  paymentMethod: paymentMethodEnum.optional(),
+  amountReceived: z.coerce.number().min(0).optional(),
+  changeDue: z.coerce.number().min(0).optional(),
 });
 
 export const salesOrderQuerySchema = z.object({
@@ -57,6 +67,7 @@ export const salesOrderQuerySchema = z.object({
 });
 
 export type UpdatePaymentInput = z.infer<typeof updatePaymentSchema>;
+export type AddSalesOrderItemsInput = z.infer<typeof addSalesOrderItemsSchema>;
 export type CreateSalesOrderInput = z.infer<typeof createSalesOrderSchema>;
 export type UpdateSalesOrderInput = z.infer<typeof updateSalesOrderSchema>;
 export type UpdateSalesOrderStatusInput = z.infer<typeof updateSalesOrderStatusSchema>;
