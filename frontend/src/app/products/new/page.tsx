@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/src/components/dashboard-layout";
-import { categoriesApi } from "@/src/lib/api";
+import { categoriesApi, warehousesApi } from "@/src/lib/api";
 import { ProductForm } from "../_components/product-form";
 
 interface Category {
@@ -10,27 +10,38 @@ interface Category {
   name: string;
 }
 
+interface Warehouse {
+  id: string;
+  name: string;
+}
+
 export default function NewProductPage() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
 
   useEffect(() => {
-    const fetchCategories = async (): Promise<void> => {
+    const fetchData = async (): Promise<void> => {
       try {
-        const response = await categoriesApi.list({ page: 1, limit: 100 });
-        if (response.data?.success)
-          setCategories(response.data?.data);
-        else
-          console.error("Failed to fetch categories:", response);
+        const [catRes, whRes] = await Promise.all([
+          categoriesApi.list({ page: 1, limit: 100 }),
+          warehousesApi.list({ page: 1, limit: 100 }),
+        ]);
+        if (catRes.data?.success) setCategories(catRes.data.data || []);
+        if (whRes.data?.success && Array.isArray(whRes.data.data)) {
+          setWarehouses(
+            whRes.data.data.map((w: Warehouse) => ({ id: w.id, name: w.name }))
+          );
+        }
       } catch (error) {
-        console.error("Failed to fetch categories:", error);
+        console.error("Failed to fetch product form data:", error);
       }
     };
-    fetchCategories();
+    void fetchData();
   }, []);
 
   return (
     <DashboardLayout>
-      <ProductForm categories={categories} />
+      <ProductForm categories={categories} warehouses={warehouses} />
     </DashboardLayout>
   );
 }
